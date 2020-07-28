@@ -1,0 +1,10 @@
+server:
+  port: 8443
+
+spring:
+  datasource:
+    name: test
+    url: jdbc:mysql://localhost:3306/test?serverTimezone=UTC
+    username: root
+    password: nskeylab2020
+    driver-class-name: com.mysql.jdbc.Driver

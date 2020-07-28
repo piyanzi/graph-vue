@@ -1,0 +1,200 @@
+<template>
+  <div>
+    <br />
+    <el-row>
+      <el-col :span="1" class="grid">
+        <el-button
+          type="success"
+          @click="addFlag=true;dialogVisible=true"
+          icon="el-icon-circle-plus-outline"
+          size="mini"
+          round
+        >上传</el-button>
+      </el-col>
+    </el-row>
+    <br />
+    <el-table
+      :data="tableForm.slice((currentPage-1)*PageSize,currentPage*PageSize)"
+      border
+      ref="tableForm"
+      style="width: 100%"
+    >
+        <el-table-column
+          prop="id"
+          label="元件id"
+          width="180">
+        </el-table-column>
+        <el-table-column
+          label="元件类型"
+          width="180">
+        </el-table-column>
+        <el-table-column
+          prop="name"
+          label="元件名称"
+          width="180">
+        </el-table-column>
+        <el-table-column
+          prop="path"
+          label="元件位置"
+          width="200">
+        </el-table-column>
+      <el-table-column label="操作" width="200pt">
+        <template slot-scope="scope">
+          <el-button size="small" @click="handleEdit(scope.row)">编辑</el-button>
+          <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <div class="tabListPage">
+      <el-pagination @size-change="handleSizeChange"
+         @current-change="handleCurrentChange"
+         :current-page="currentPage"
+         :page-sizes="pageSizes"
+         :page-size="PageSize" layout="total, sizes, prev, pager, next, jumper"
+         :total="totalCount">
+      </el-pagination>
+    </div>
+    <el-dialog title="上传" width="30%" :visible.sync="addFormVisible">
+      <!-- 在el-dialog中进行嵌套el-form实现弹出表格的效果 -->
+      <el-form>
+        <el-form-item label="元件名称" label-width="80px">
+          <el-input v-model="addForm.name" auto-complete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancel">取 消</el-button>
+        <!-- 设置触发更新的方法 -->
+        <el-button type="primary" @click="update">确 定</el-button>
+      </div>
+    </el-dialog>
+    <el-dialog title="编辑" width="30%" :visible.sync="editFormVisible">
+      <!-- 在el-dialog中进行嵌套el-form实现弹出表格的效果 -->
+      <el-form>
+        <el-form-item label="元件名称" label-width="80px">
+          <el-input v-model="editForm.name" auto-complete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancel">取 消</el-button>
+        <!-- 设置触发更新的方法 -->
+        <el-button type="primary" @click="update">确 定</el-button>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+  import axios from 'axios';
+  axios.defaults.baseURL = '/api';
+  var id;
+  var name;
+  var path;
+  export default {
+    name: 'user',
+    methods: {
+      handleEdit(row) {
+        this.editForm = row;
+        id = row.id;
+        path = row.path;
+        this.editFormVisible = true;
+      },
+      handleDelete(row) {
+        // 设置类似于console类型的功能
+        this.$confirm("永久删除该元件, 是否继续?", "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        })
+          .then(() => {
+            // 移除对应索引位置的数据，可以对row进行设置向后台请求删除数据
+            this.tableForm.splice(1);
+            this.$message({
+              type: "success",
+              message: "删除成功!"
+            });
+          })
+          .catch(() => {
+            this.$message({
+              type: "info",
+              message: "已取消删除"
+            });
+          });
+      },
+      cancel() {
+        location.reload();
+        // 取消的时候直接设置对话框不可见即可
+        this.editFormVisible = false;
+        this.addFormVisible=false;
+      },
+      update() {
+        var data = new FormData();
+        name = this.editForm.name;
+        data.append('id',id);
+        data.append('name',name);
+        data.append('path',path);
+        console.log(name);
+        this.$axios.post('/graph/setElements',
+          {
+            "id":id,
+            "name":name,
+            "path":path,
+          }
+        ).then((response)=>{
+            if(response.data.code==0){
+              this.tableForm = response.data.elements;
+              this.totalCount = response.data.elements.length;
+            }
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
+        this.cancel();
+      },
+      // 分页
+      // 每页显示的条数
+      handleSizeChange(val) {
+        // 改变每页显示的条数
+        this.PageSize=val
+        // 注意：在改变每页显示的条数时，要将页码显示到第一页
+        this.currentPage=1
+      },
+      // 显示第几页
+      handleCurrentChange(val) {
+        // 改变默认的页数
+        this.currentPage=val
+      },
+      getElement(){
+        this.$axios.post('/graph/getElements')
+          .then((response)=>{
+            if(response.data.code==0){
+              this.tableForm = response.data.elements;
+              this.totalCount = response.data.elements.length;
+            }
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
+      }
+    },
+    mounted(){
+      this.getElement();
+    },
+    data() {
+      return {
+        tableForm:[],
+        editForm: [],
+        addForm: [],
+        // 默认显示第几页
+        currentPage:1,
+        // 总条数，根据接口获取数据长度(注意：这里不能为空)
+        totalCount:1,
+        // 个数选择器（可修改）
+        pageSizes:[5,10,15,20],
+        // 默认每页显示的条数（可修改）
+        PageSize:5,
+        editFormVisible: false,
+        addFormVisible: false,
+      }
+    }
+  }
+</script>
