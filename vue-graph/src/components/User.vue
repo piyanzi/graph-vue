@@ -5,7 +5,7 @@
       <el-col :span="1" class="grid">
         <el-button
           type="success"
-          @click="addFlag=true;dialogVisible=true"
+          @click="addEdit"
           icon="el-icon-circle-plus-outline"
           size="mini"
           round
@@ -55,6 +55,17 @@
       </el-pagination>
     </div>
     <el-dialog title="上传" width="30%" :visible.sync="addFormVisible">
+      <el-upload
+        class="upload-demo"
+        action="https://jsonplaceholder.typicode.com/posts/"
+        :on-preview="handlePreview"
+        :on-remove="handleRemove"
+        multiple
+        :limit="1"
+        :file-list="fileList">
+        <el-button size="small" type="primary">点击上传</el-button>
+        <div slot="tip" class="el-upload__tip">请上传元件图片</div>
+      </el-upload>
       <!-- 在el-dialog中进行嵌套el-form实现弹出表格的效果 -->
       <el-form>
         <el-form-item label="元件名称" label-width="80px">
@@ -67,10 +78,10 @@
         <el-button type="primary" @click="update">确 定</el-button>
       </div>
     </el-dialog>
-    <el-dialog title="编辑" width="30%" :visible.sync="editFormVisible">
+    <el-dialog title="编辑" width="30%" :visible.sync="editFormVisible" >
       <!-- 在el-dialog中进行嵌套el-form实现弹出表格的效果 -->
-      <el-form>
-        <el-form-item label="元件名称" label-width="80px">
+      <el-form :rules="editRules" :model="editForm">
+        <el-form-item label="元件名称" label-width="80px" prop="editName">
           <el-input v-model="editForm.name" auto-complete="off"></el-input>
         </el-form-item>
       </el-form>
@@ -92,11 +103,20 @@
   export default {
     name: 'user',
     methods: {
+      handleRemove(file, fileList) {
+        console.log(file, fileList);
+      },
+      handlePreview(file) {
+        console.log(file);
+      },
       handleEdit(row) {
         this.editForm = row;
         id = row.id;
         path = row.path;
         this.editFormVisible = true;
+      },
+      addEdit(){
+        this.addFormVisible = true;
       },
       handleDelete(row) {
         // 设置类似于console类型的功能
@@ -127,28 +147,33 @@
         this.addFormVisible=false;
       },
       update() {
-        var data = new FormData();
-        name = this.editForm.name;
-        data.append('id',id);
-        data.append('name',name);
-        data.append('path',path);
-        console.log(name);
-        this.$axios.post('/graph/setElements',
-          {
-            "id":id,
-            "name":name,
-            "path":path,
+        this.$refs.ruleForm2.validate((valid) =>{
+          if(valid){
+            var data = new FormData();
+            var that = this;
+            name = this.editForm.name;
+            data.append('id',id);
+            data.append('name',name);
+            data.append('path',path);
+            console.log(name);
+            this.$axios.post('/graph/setElements',
+              {
+                "id":id,
+                "name":name,
+                "path":path,
+              }
+            ).then((response)=>{
+              if(response.data.code==0){
+                that.tableForm = response.data.elements;
+                that.totalCount = response.data.elements.length;
+              }
+            })
+              .catch(function (error) {
+                console.log(error);
+              });
+            this.cancel();
           }
-        ).then((response)=>{
-            if(response.data.code==0){
-              this.tableForm = response.data.elements;
-              this.totalCount = response.data.elements.length;
-            }
-          })
-          .catch(function (error) {
-            console.log(error);
-          });
-        this.cancel();
+        })
       },
       // 分页
       // 每页显示的条数
@@ -181,8 +206,8 @@
     },
     data() {
       return {
+        fileList:[],
         tableForm:[],
-        editForm: [],
         addForm: [],
         // 默认显示第几页
         currentPage:1,
@@ -194,6 +219,12 @@
         PageSize:5,
         editFormVisible: false,
         addFormVisible: false,
+        editForm: {
+          name:'',
+        },
+        editRules: {
+          editName: [{required: true, message: 'please enter your account', trigger: 'blur'}],
+        }
       }
     }
   }
