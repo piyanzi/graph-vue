@@ -78,9 +78,7 @@
 </template>
 
 <script>
-  // import axios from 'axios';
-  // //解决跨域配置
-  // axios.defaults.baseURL = '/api';
+  import Bus from '../assets/Bus.js';
   // const {mxGraph, mxClient, mxCodec, mxUtils, mxConnectionHandler, mxEvent, mxGraphHandler,
   //   mxKeyHandler, mxImage, mxGraphModel, mxRubberband, mxUndoManager, mxForm, mxRectangle, mxPrintPreview} = mxgraph;
   // import {
@@ -125,6 +123,7 @@
           itemName: "",
           attrs: [],
         },
+        projectId: "",
         rules: {
           itemName: [
             {pattern: /^[\u4E00-\u9FA5A-Za-z].*$/, message: '不能以数字或特殊字符开头', trigger: 'change'},
@@ -355,10 +354,10 @@
         var node = enc.encode(graph.getModel());
         var file = mxUtils.getXml(node);
         var _this = this;
-        _this.$axios
+        this.$axios
         .post("/graph/saveModel",
           {
-            "id": 1,
+            "id": _this.projectId,
             "file": file,
           })
         .then(function (response) {
@@ -377,10 +376,10 @@
       //从服务器读取模型
       readModel() {
         var _this = this;
-        _this.$axios
+        this.$axios
           .post("/graph/getModel",
             {
-              "id": 1,
+              "id": _this.projectId,
             })
           .then(function (response) {
             if(response.data == "error") {
@@ -403,6 +402,14 @@
       mxConnectionHandler.prototype.connectImage = new mxImage('../../../static/images/connector.gif', 18, 18);
       doc = mxUtils.createXmlDocument();
       var _this = this;
+
+      Bus.$on("curProjectId", id => {
+        _this.projectId = id;
+        console.log(_this.projectId);
+      });
+      Bus.$on("loadModel",() => {
+        getModel(graph);
+      })
 
       tbContainer = document.getElementById("tbContainer");
       container = document.getElementById("container");
@@ -487,7 +494,6 @@
       graph.getSelectionModel().addListener(mxEvent.CHANGE, function(sender, evt) {
         selectionChanged(graph);
       });
-      getModel(graph);
       //创建自定义菜单（删除,全选）
       function createPopupMenu(graph, menu, cell, evt) {
         if (cell != null) {
@@ -540,7 +546,7 @@
         _this.$axios
         .post("/graph/getModel",
           {
-            "id": 1,
+            "id": _this.projectId,
           })
         .then(function (response) {
           var model = mxUtils.parseXml(response.data);
