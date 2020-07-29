@@ -78,9 +78,9 @@
 </template>
 
 <script>
-  import axios from 'axios';
-  //解决跨域配置
-  axios.defaults.baseURL = '/api';
+  // import axios from 'axios';
+  // //解决跨域配置
+  // axios.defaults.baseURL = '/api';
   // const {mxGraph, mxClient, mxCodec, mxUtils, mxConnectionHandler, mxEvent, mxGraphHandler,
   //   mxKeyHandler, mxImage, mxGraphModel, mxRubberband, mxUndoManager, mxForm, mxRectangle, mxPrintPreview} = mxgraph;
   // import {
@@ -384,10 +384,15 @@
               }
             })
           .then(function (response) {
-            var model = mxUtils.parseXml(response.data);
-            var dec = new mxCodec(model);
-            dec.decode(model.documentElement, graph.getModel());
-            _this.$message('模型加载完成！');
+            if(response.data == "error") {
+              _this.$message('获取模型文件错误，请重试！');
+            }
+            else {
+              var model = mxUtils.parseXml(response.data);
+              var dec = new mxCodec(model);
+              dec.decode(model.documentElement, graph.getModel());
+              _this.$message('模型加载完成！');
+            }
           })
           .catch(function (error) {
             console.log(error);

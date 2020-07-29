@@ -18,7 +18,7 @@ public class ProjectController {
     public String getModel()  {
         StringBuilder s = new StringBuilder();
         try{
-            File file = new File("src/main/resources/models/1.xml");
+            File file = new File("src/main/resources/models/111/1.xml");
             InputStreamReader in = new InputStreamReader(new FileInputStream(file),"UTF-8");
             BufferedReader br = new BufferedReader(in);
             String line = "";
@@ -27,7 +27,7 @@ public class ProjectController {
             }
         }catch (Exception e) {
             System.out.println(e);
-            return "";
+            return "error";
         }
         return s.toString();
     }
@@ -36,7 +36,7 @@ public class ProjectController {
     @ResponseBody
     public String setModel(@RequestBody JSONObject file)  {
         try{
-            File filepath = new File("src/main/resources/models/1.xml");
+            File filepath = new File("src/main/resources/models/111/1.xml");
             OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(filepath,false),"UTF-8");
             BufferedWriter br = new BufferedWriter(out);
             String str = file.get("file").toString();
