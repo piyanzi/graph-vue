@@ -17,6 +17,8 @@ public class ProjectController {
     @Autowired
     ProjectService projectService;
 
+    static String path = "src/main/resources";
+
     //模型保存读取test
     @PostMapping(value = "/graph/getTestModel")
     @ResponseBody
@@ -63,7 +65,6 @@ public class ProjectController {
     @ResponseBody
     public String getModelById(@RequestBody JSONObject json)  {
         StringBuilder s = new StringBuilder();
-        String path = "src/main/resources";
         String filepath = projectService.findProjectById(json.getInteger("id"));
         try{
             File file = new File(path + filepath);
@@ -84,7 +85,6 @@ public class ProjectController {
     @PostMapping(value = "/graph/saveModel")
     @ResponseBody
     public String setModelById(@RequestBody JSONObject jsonObject)  {
-        String path = "src/main/resources";
         String filepath = projectService.findProjectById(jsonObject.getInteger("id"));
         try{
             File file = new File(path + filepath);

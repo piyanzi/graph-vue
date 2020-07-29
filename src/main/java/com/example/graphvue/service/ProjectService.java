@@ -14,8 +14,8 @@ public class ProjectService {
     @Autowired
     ProjectDAO projectDAO;
 
-    public String findProjectById(Integer eid) {
-        Project project = projectDAO.findProjectById(eid);
+    public String findProjectById(Integer id) {
+        Project project = projectDAO.findProjectById(id);
         return project.getPath();
     }
 

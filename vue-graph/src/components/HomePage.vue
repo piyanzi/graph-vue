@@ -7,8 +7,10 @@
       <user></user>
     </el-tab-pane>
     <el-tab-pane label="属性管理" name="third">属性管理</el-tab-pane>
-    <el-tab-pane label="项目管理" name="fourth">项目管理</el-tab-pane>
-    <el-tab-pane label="画图" style="width: 100%;height: 100%;">
+    <el-tab-pane label="项目管理" name="fourth">
+      <project></project>
+    </el-tab-pane>
+    <el-tab-pane label="画图" name="graph" style="width: 100%;height: 100%;">
       <graph style="width: 100%;height: 92vh;"></graph>
     </el-tab-pane>
   </el-tabs>
@@ -16,8 +18,14 @@
 <script>
   import graph from './Graph.vue';
   import user from './User.vue';
+  import project from './Project.vue';
+  import Bus from "../assets/Bus.js";
   export default {
-    components: {graph,user},
+    components: {
+      "graph": graph,
+      "user": user,
+      "project": project,
+    },
     data() {
       return {
         activeName: 'second',
@@ -25,8 +33,14 @@
     },
     methods: {
       handleClick(tab, event) {
-        console.log(tab, event);
+        // console.log(tab, event);
       }
-    }
+    },
+    mounted() {
+      Bus.$on("changeTab",tabName => {
+        this.activeName = tabName;
+        Bus.$emit("loadModel");
+      })
+    },
   };
 </script>
