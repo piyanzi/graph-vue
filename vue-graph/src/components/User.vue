@@ -54,27 +54,32 @@
          :total="totalCount">
       </el-pagination>
     </div>
-    <el-dialog title="上传" width="30%" :visible.sync="addFormVisible">
-      <el-upload
-        class="upload-demo"
-        ref="upload"
-        accept="image/gif,image/jpeg,image/jpg,image/png,image/svg"
-        action="https://jsonplaceholder.typicode.com/posts/"
-        :on-preview="handlePreview"
-        :on-remove="handleRemove"
-        multiple
-        :limit="1"
-        :file-list="fileList"
-        :auto-upload="false">
-        <el-button size="small" type="primary">点击上传</el-button>
-        <div slot="tip" class="el-upload__tip">请上传元件图片</div>
-      </el-upload>
-      <br />
+
+    <el-dialog title="上传" width="30%" :visible.sync="addFormVisible" @close="closeDialog">
+<!--      <el-upload-->
+<!--        class="upload-demo"-->
+<!--        ref="upload"-->
+<!--        accept="image/gif,image/jpeg,image/jpg,image/png,image/svg"-->
+<!--        action="https://jsonplaceholder.typicode.com/posts/"-->
+<!--        :on-preview="handlePreview"-->
+<!--        :on-remove="handleRemove"-->
+<!--        multiple-->
+<!--        :limit="1"-->
+<!--        :file-list="fileList"-->
+<!--        :auto-upload="false">-->
+<!--        <el-button size="small" type="primary">点击上传</el-button>-->
+<!--        <div slot="tip" class="el-upload__tip">请上传元件图片</div>-->
+<!--      </el-upload>-->
+
       <!-- 在el-dialog中进行嵌套el-form实现弹出表格的效果 -->
       <el-form :rules="addEditRules" :model="addEditForm" ref="addEditForm">
+        <el-form-item label="元件id" label-width="80px" prop="id">
+          <el-input v-model="addEditForm.id" auto-complete="off"></el-input>
+        </el-form-item>
         <el-form-item label="元件名称" label-width="80px" prop="name">
           <el-input v-model="addEditForm.name" auto-complete="off"></el-input>
         </el-form-item>
+        <el-button type="primary" @click="_upload">上传图片</el-button>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="cancel">取 消</el-button>
@@ -96,6 +101,9 @@
         <el-button type="primary" @click="update">确 定</el-button>
       </div>
     </el-dialog>
+
+    <input type="file" id="upload" @change="handle_image($event)" accept=".svg" style="display: none;">
+
   </div>
 </template>
 
@@ -108,6 +116,27 @@
   export default {
     name: 'user',
     methods: {
+      closeDialog() {
+        this.addEditForm.id = "";
+        this.addEditForm.name = "";
+        this.addEditForm.path = "";
+      },
+      _upload() {
+        document.getElementById("upload").click();
+      },
+      handle_image($event) {
+        var _this = this;
+        var files = event.target.files;
+        if (files != null) {
+          var file = files[0];
+          var reader = new FileReader();
+          reader.onload = function (e) {
+            _this.addEditForm.path = e.target.result;
+            _this.$message("文件已添加");
+          }
+          reader.readAsText(file);
+        }
+      },
       handleRemove(file, fileList) {
         console.log(file, fileList);
       },
@@ -154,15 +183,14 @@
       addEdit(){
         this.$refs.addEditForm.validate((valid) =>{
           if(valid){
-            var data = new FormData();
             var that = this;
+            id = this.addEditForm.id;
             name = this.addEditForm.name;
-            data.append('id',id);
-            data.append('name',name);
-            data.append('path',path);
-            console.log(name);
+            path = this.addEditForm.path;
+            console.log(path);
             this.$axios.post('/graph/addElements',
               {
+                "id": id,
                 "name":name,
                 "path":path,
               }
@@ -175,7 +203,8 @@
               .catch(function (error) {
                 console.log(error);
               });
-            this.addFormVisible=false;
+            this.$message("上传成功！");
+            this.cancel();
           }
         })
       },
@@ -255,7 +284,9 @@
           name:'',
         },
         addEditForm: {
+          id: '',
           name:'',
+          path: '',
         },
         editRules: {
           name: [{required: true, message: '请输入元件名称', trigger: 'change'}],

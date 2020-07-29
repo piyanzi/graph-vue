@@ -11,7 +11,7 @@ import javax.persistence.*;
 public class Element {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "element_id")
     int id;
     @Column(name = "element_name")

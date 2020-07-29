@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.example.graphvue.dao.ElementDAO;
 import com.example.graphvue.pojo.Element;
+import com.example.graphvue.pojo.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -32,8 +33,8 @@ public class ElementService {
         jsonObject.put("code", 0);
         return jsonObject.toJSONString();
     }
-    public String addElement(String name,String path){
-        elementDAO.addInfo(name,path);
+    public String addElement(Element element){
+        elementDAO.save(element);
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("code", 0);
         return jsonObject.toJSONString();

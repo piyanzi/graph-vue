@@ -12,9 +12,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.util.HtmlUtils;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+
 @Controller
 public class ElementController {
-
+    static String path = "src/main/resources/static/elements/";
     @Autowired
     ElementService elementService;
 
@@ -36,6 +41,21 @@ public class ElementController {
     @PostMapping(value = "/graph/addElements")
     @ResponseBody
     public String addElement(@RequestBody Element element){
-        return elementService.addElement(element.getName(),element.getPath());
+        try{
+            File file = new File(path + element.getName() + ".svg");
+            OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(file,false),"UTF-8");
+            BufferedWriter br = new BufferedWriter(out);
+            String str = element.getPath();
+            br.write(str);
+            br.flush();
+            br.close();
+            element.setPath("/elements/" + element.getName() + ".svg");
+        }catch (Exception e) {
+            System.out.println(e);
+            JSONObject json = new JSONObject();
+            json.put("code",1);
+            return json.toJSONString();
+        }
+        return elementService.addElement(element);
     }
 }

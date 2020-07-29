@@ -417,7 +417,7 @@
       });
       Bus.$on("loadModel",() => {
         getModel(graph);
-      })
+      });
 
       tbContainer = document.getElementById("tbContainer");
       container = document.getElementById("container");
