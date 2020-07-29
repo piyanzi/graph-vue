@@ -356,8 +356,9 @@
         var file = mxUtils.getXml(node);
         var _this = this;
         _this.$axios
-        .post("/graph/saveTestModel",
+        .post("/graph/saveModel",
           {
+            "id": 1,
             "file": file,
           })
         .then(function (response) {
@@ -377,11 +378,9 @@
       readModel() {
         var _this = this;
         _this.$axios
-          .post("/graph/getTestModel",
-            "",{
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-              }
+          .post("/graph/getModel",
+            {
+              "id": 1,
             })
           .then(function (response) {
             if(response.data == "error") {
@@ -539,7 +538,10 @@
         // var data = new FormData();
         // data.append();
         _this.$axios
-        .post("/graph/getTestModel")
+        .post("/graph/getModel",
+          {
+            "id": 1,
+          })
         .then(function (response) {
           var model = mxUtils.parseXml(response.data);
           var dec = new mxCodec(model);

@@ -23,7 +23,7 @@ public class AttributeController {
     @PostMapping(value = "/graph/getAttributes")
     @ResponseBody
     public String getAttributes(@RequestBody JSONObject json) {
-        return attributeService.findAllByEid(Integer.parseInt(json.get("eid").toString()));
+        return attributeService.findAllByEid(json.getInteger("eid"));
     }
 
 }
