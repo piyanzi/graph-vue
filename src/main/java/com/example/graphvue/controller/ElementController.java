@@ -58,4 +58,11 @@ public class ElementController {
         }
         return elementService.addElement(element);
     }
+
+    @CrossOrigin
+    @PostMapping(value = "/graph/deleteElements")
+    @ResponseBody
+    public String deleteElement(@RequestBody Element element){
+        return elementService.deleteElement(element.getId());
+    }
 }

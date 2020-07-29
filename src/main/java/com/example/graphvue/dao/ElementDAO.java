@@ -1,6 +1,7 @@
 package com.example.graphvue.dao;
 
 import com.example.graphvue.pojo.Element;
+import com.example.graphvue.pojo.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -10,7 +11,7 @@ import java.util.List;
 
 public interface ElementDAO extends JpaRepository<Element,Integer> {
     List<Element> findAll();
-
+    Element findById(int id);
 
     @Transactional
     @Modifying

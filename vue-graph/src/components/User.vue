@@ -56,20 +56,6 @@
     </div>
 
     <el-dialog title="上传" width="30%" :visible.sync="addFormVisible" @close="closeDialog">
-<!--      <el-upload-->
-<!--        class="upload-demo"-->
-<!--        ref="upload"-->
-<!--        accept="image/gif,image/jpeg,image/jpg,image/png,image/svg"-->
-<!--        action="https://jsonplaceholder.typicode.com/posts/"-->
-<!--        :on-preview="handlePreview"-->
-<!--        :on-remove="handleRemove"-->
-<!--        multiple-->
-<!--        :limit="1"-->
-<!--        :file-list="fileList"-->
-<!--        :auto-upload="false">-->
-<!--        <el-button size="small" type="primary">点击上传</el-button>-->
-<!--        <div slot="tip" class="el-upload__tip">请上传元件图片</div>-->
-<!--      </el-upload>-->
 
       <!-- 在el-dialog中进行嵌套el-form实现弹出表格的效果 -->
       <el-form :rules="addEditRules" :model="addEditForm" ref="addEditForm">
@@ -137,12 +123,6 @@
           reader.readAsText(file);
         }
       },
-      handleRemove(file, fileList) {
-        console.log(file, fileList);
-      },
-      handlePreview(file) {
-        console.log(file);
-      },
       handleEdit(row) {
         this.editForm = row;
         id = row.id;
@@ -154,25 +134,22 @@
       },
       handleDelete(row) {
         // 设置类似于console类型的功能
-        this.$confirm("永久删除该元件, 是否继续?", "提示", {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "warning"
+        var that = this;
+        id = row.id;
+        this.$axios.post('/graph/deleteElements',
+          {
+            "id": id,
+          }
+        ).then((response)=>{
+          if(response.data.code==0){
+            that.tableForm = response.data.elements;
+            that.totalCount = response.data.elements.length;
+          }
         })
-          .then(() => {
-            // 移除对应索引位置的数据，可以对row进行设置向后台请求删除数据
-            this.tableForm.splice(1);
-            this.$message({
-              type: "success",
-              message: "删除成功!"
-            });
-          })
-          .catch(() => {
-            this.$message({
-              type: "info",
-              message: "已取消删除"
-            });
+          .catch(function (error) {
+            console.log(error);
           });
+        this.cancel();
       },
       cancel() {
         location.reload();
@@ -275,9 +252,9 @@
         // 总条数，根据接口获取数据长度(注意：这里不能为空)
         totalCount:1,
         // 个数选择器（可修改）
-        pageSizes:[5,10,15,20],
+        pageSizes:[10,20,30,50],
         // 默认每页显示的条数（可修改）
-        PageSize:5,
+        PageSize:10,
         editFormVisible: false,
         addFormVisible: false,
         editForm: {
@@ -292,7 +269,9 @@
           name: [{required: true, message: '请输入元件名称', trigger: 'change'}],
         },
         addEditRules: {
+          path: [{required: true, message: '请输入元件名称', trigger: 'change'}],
           name: [{required: true, message: '请输入元件名称', trigger: 'change'}],
+          id: [{required: true, message: '请输入元件id', trigger: 'change'}],
         },
       }
     }
