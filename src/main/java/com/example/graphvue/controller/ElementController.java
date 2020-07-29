@@ -31,4 +31,11 @@ public class ElementController {
     public String setElement(@RequestBody Element element){
         return elementService.setElement(element.getId(),element.getName());
     }
+
+    @CrossOrigin
+    @PostMapping(value = "/graph/addElements")
+    @ResponseBody
+    public String addElement(@RequestBody Element element){
+        return elementService.addElement(element.getName(),element.getPath());
+    }
 }

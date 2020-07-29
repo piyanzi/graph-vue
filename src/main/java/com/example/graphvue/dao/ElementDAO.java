@@ -16,4 +16,9 @@ public interface ElementDAO extends JpaRepository<Element,Integer> {
     @Modifying
     @Query("update Element e set e.name = ?2 where e.id = ?1")
     void updateName(int id,String name);
+
+    @Transactional
+    @Modifying
+    @Query("update Element e set e.name = ?2 where e.id = ?1")
+    void addInfo(String name,String path);
 }

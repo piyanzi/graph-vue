@@ -5,7 +5,7 @@
       <el-col :span="1" class="grid">
         <el-button
           type="success"
-          @click="addEdit"
+          @click="handleAddEdit"
           icon="el-icon-circle-plus-outline"
           size="mini"
           round
@@ -57,31 +57,36 @@
     <el-dialog title="上传" width="30%" :visible.sync="addFormVisible">
       <el-upload
         class="upload-demo"
+        ref="upload"
+        accept="image/gif,image/jpeg,image/jpg,image/png,image/svg"
         action="https://jsonplaceholder.typicode.com/posts/"
         :on-preview="handlePreview"
         :on-remove="handleRemove"
         multiple
         :limit="1"
-        :file-list="fileList">
+        :file-list="fileList"
+        :auto-upload="false">
         <el-button size="small" type="primary">点击上传</el-button>
         <div slot="tip" class="el-upload__tip">请上传元件图片</div>
       </el-upload>
+      <br />
       <!-- 在el-dialog中进行嵌套el-form实现弹出表格的效果 -->
-      <el-form>
-        <el-form-item label="元件名称" label-width="80px">
-          <el-input v-model="addForm.name" auto-complete="off"></el-input>
+      <el-form :rules="addEditRules" :model="addEditForm" ref="addEditForm">
+        <el-form-item label="元件名称" label-width="80px" prop="name">
+          <el-input v-model="addEditForm.name" auto-complete="off"></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="cancel">取 消</el-button>
         <!-- 设置触发更新的方法 -->
-        <el-button type="primary" @click="update">确 定</el-button>
+        <el-button type="primary" @click="addEdit">确 定</el-button>
       </div>
     </el-dialog>
+
     <el-dialog title="编辑" width="30%" :visible.sync="editFormVisible" >
       <!-- 在el-dialog中进行嵌套el-form实现弹出表格的效果 -->
-      <el-form :rules="editRules" :model="editForm">
-        <el-form-item label="元件名称" label-width="80px" prop="editName">
+      <el-form :rules="editRules" :model="editForm" ref="editForm">
+        <el-form-item label="元件名称" label-width="80px" prop="name">
           <el-input v-model="editForm.name" auto-complete="off"></el-input>
         </el-form-item>
       </el-form>
@@ -115,7 +120,7 @@
         path = row.path;
         this.editFormVisible = true;
       },
-      addEdit(){
+      handleAddEdit(){
         this.addFormVisible = true;
       },
       handleDelete(row) {
@@ -146,8 +151,36 @@
         this.editFormVisible = false;
         this.addFormVisible=false;
       },
+      addEdit(){
+        this.$refs.addEditForm.validate((valid) =>{
+          if(valid){
+            var data = new FormData();
+            var that = this;
+            name = this.addEditForm.name;
+            data.append('id',id);
+            data.append('name',name);
+            data.append('path',path);
+            console.log(name);
+            this.$axios.post('/graph/addElements',
+              {
+                "name":name,
+                "path":path,
+              }
+            ).then((response)=>{
+              if(response.data.code==0){
+                that.tableForm = response.data.elements;
+                that.totalCount = response.data.elements.length;
+              }
+            })
+              .catch(function (error) {
+                console.log(error);
+              });
+            this.addFormVisible=false;
+          }
+        })
+      },
       update() {
-        this.$refs.ruleForm2.validate((valid) =>{
+        this.$refs.editForm.validate((valid) =>{
           if(valid){
             var data = new FormData();
             var that = this;
@@ -160,7 +193,6 @@
               {
                 "id":id,
                 "name":name,
-                "path":path,
               }
             ).then((response)=>{
               if(response.data.code==0){
@@ -222,9 +254,15 @@
         editForm: {
           name:'',
         },
+        addEditForm: {
+          name:'',
+        },
         editRules: {
-          editName: [{required: true, message: 'please enter your account', trigger: 'blur'}],
-        }
+          name: [{required: true, message: '请输入元件名称', trigger: 'change'}],
+        },
+        addEditRules: {
+          name: [{required: true, message: '请输入元件名称', trigger: 'change'}],
+        },
       }
     }
   }

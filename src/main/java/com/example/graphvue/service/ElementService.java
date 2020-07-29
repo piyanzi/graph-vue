@@ -32,4 +32,10 @@ public class ElementService {
         jsonObject.put("code", 0);
         return jsonObject.toJSONString();
     }
+    public String addElement(String name,String path){
+        elementDAO.addInfo(name,path);
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("code", 0);
+        return jsonObject.toJSONString();
+    }
 }
