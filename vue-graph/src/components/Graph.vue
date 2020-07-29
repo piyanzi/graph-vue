@@ -350,6 +350,10 @@
       },
       //保存模型到服务器
       saveModel() {
+        if(_this.projectId == "") {
+          _this.$message('未指定项目，请选择项目后再保存！');
+          return;
+        }
         var enc = new mxCodec(mxUtils.createXmlDocument());
         var node = enc.encode(graph.getModel());
         var file = mxUtils.getXml(node);
@@ -376,6 +380,10 @@
       //从服务器读取模型
       readModel() {
         var _this = this;
+        if(_this.projectId == "") {
+          _this.$message('未指定项目，请选择项目后再加载！');
+          return;
+        }
         this.$axios
           .post("/graph/getModel",
             {
