@@ -1,5 +1,5 @@
 <template>
-  <div id="project">
+  <div>
     <br />
     <el-row>
       <el-col :span="1" class="grid">
@@ -9,7 +9,7 @@
           icon="el-icon-circle-plus-outline"
           size="mini"
           round
-        >新建项目</el-button>
+        >上传</el-button>
       </el-col>
     </el-row>
     <br />
@@ -19,29 +19,27 @@
       ref="tableForm"
       style="width: 100%"
     >
-      <el-table-column
-        prop="id"
-        label="项目id"
-        width="180">
-      </el-table-column>
-      <el-table-column
-        prop="uid"
-        label="用户id"
-        width="180">
-      </el-table-column>
-      <el-table-column
-        prop="name"
-        label="项目名称"
-        width="180">
-      </el-table-column>
-      <el-table-column
-        prop="path"
-        label="项目文件"
-        width="200">
-      </el-table-column>
-      <el-table-column label="操作" width="250pt">
+        <el-table-column
+          prop="id"
+          label="元件id"
+          width="180">
+        </el-table-column>
+        <el-table-column
+          label="元件类型"
+          width="180">
+        </el-table-column>
+        <el-table-column
+          prop="name"
+          label="元件名称"
+          width="180">
+        </el-table-column>
+        <el-table-column
+          prop="path"
+          label="元件位置"
+          width="200">
+        </el-table-column>
+      <el-table-column label="操作" width="200pt">
         <template slot-scope="scope">
-          <el-button size="small" type="primary" @click="open(scope.row.id)">打开</el-button>
           <el-button size="small" @click="handleEdit(scope.row)">编辑</el-button>
           <el-button size="small" type="danger" @click="handleDelete(scope.row)">删除</el-button>
         </template>
@@ -49,28 +47,25 @@
     </el-table>
     <div class="tabListPage">
       <el-pagination @size-change="handleSizeChange"
-                     @current-change="handleCurrentChange"
-                     :current-page="currentPage"
-                     :page-sizes="pageSizes"
-                     :page-size="PageSize" layout="total, sizes, prev, pager, next, jumper"
-                     :total="totalCount">
+         @current-change="handleCurrentChange"
+         :current-page="currentPage"
+         :page-sizes="pageSizes"
+         :page-size="PageSize" layout="total, sizes, prev, pager, next, jumper"
+         :total="totalCount">
       </el-pagination>
     </div>
 
-    <el-dialog title="新建项目" width="30%" :visible.sync="addFormVisible" @close="closeDialog">
+    <el-dialog title="上传" width="30%" :visible.sync="addFormVisible" @close="closeDialog">
 
       <!-- 在el-dialog中进行嵌套el-form实现弹出表格的效果 -->
       <el-form :rules="addEditRules" :model="addEditForm" ref="addEditForm">
-        <el-form-item label="项目id" label-width="80px" prop="id">
+        <el-form-item label="元件id" label-width="80px" prop="id">
           <el-input v-model="addEditForm.id" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="用户id" label-width="80px" prop="uid">
-          <el-input v-model="addEditForm.uid" auto-complete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="项目名称" label-width="80px" prop="name">
+        <el-form-item label="元件名称" label-width="80px" prop="name">
           <el-input v-model="addEditForm.name" auto-complete="off"></el-input>
         </el-form-item>
-        <el-button type="primary" @click="_upload">上传文件</el-button>
+        <el-button type="primary" @click="_upload">上传图片</el-button>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="cancel">取 消</el-button>
@@ -93,7 +88,7 @@
       </div>
     </el-dialog>
 
-    <input type="file" id="upload_xml" @change="handle_file($event)" accept=".xml" style="display: none;">
+    <input type="file" id="upload" @change="handle_image($event)" accept=".svg" style="display: none;">
 
   </div>
 </template>
@@ -102,54 +97,57 @@
   var id;
   var name;
   var path;
-  var uid;
-  import Bus from "../assets/Bus.js";
   export default {
-    name: "project",
-    inject:["reloadProject"],
+    name: 'elements',
+    inject:["reloadElement"],
     methods: {
-      //关闭弹框
       closeDialog() {
         this.addEditForm.id = "";
-        this.addEditForm.uid = "";
         this.addEditForm.name = "";
         this.addEditForm.path = "";
       },
       _upload() {
-        document.getElementById("upload_xml").click();
+        document.getElementById("upload").click();
       },
-      cancel() {
-        this.reloadProject();
-        // 取消的时候直接设置对话框不可见即可
-        this.editFormVisible = false;
-        this.addFormVisible=false;
+      handle_image($event) {
+        var _this = this;
+        var files = event.target.files;
+        if (files != null) {
+          var file = files[0];
+          var reader = new FileReader();
+          reader.onload = function (e) {
+            _this.addEditForm.path = e.target.result;
+            _this.$message("文件已添加");
+          }
+          reader.readAsText(file);
+        }
       },
-      //编辑
       handleEdit(row) {
         this.editForm = row;
         id = row.id;
-        uid = row.uid;
         path = row.path;
         this.editFormVisible = true;
       },
-      //删除
+      handleAddEdit(){
+        this.addFormVisible = true;
+      },
       handleDelete(row) {
         var that = this;
-        this.$confirm("永久删除该项目, 是否继续?", "提示", {
+        this.$confirm("永久删除该元件, 是否继续?", "提示", {
           confirmButtonText: "确定",
           cancelButtonText: "取消",
           type: "warning"
         })
           .then(() => {
             id = row.id;
-            that.$axios.post('/graph/deleteProjects',
+            that.$axios.post('/graph/deleteElements',
               {
                 "id": id,
               }
             ).then((response) => {
               if (response.data.code == 0) {
-                that.tableForm = response.data.projects;
-                that.totalCount = response.data.projects.length;
+                that.tableForm = response.data.elements;
+                that.totalCount = response.data.elements.length;
               }
             })
               .catch(function (error) {
@@ -158,26 +156,34 @@
             this.cancel();
           });
       },
+      cancel() {
+        this.reloadElement();
+        // 取消的时候直接设置对话框不可见即可
+        this.editFormVisible = false;
+        this.addFormVisible=false;
+      },
       addEdit(){
         this.$refs.addEditForm.validate((valid) =>{
           if(valid){
             var that = this;
             id = this.addEditForm.id;
-            uid = this.addEditForm.uid;
             name = this.addEditForm.name;
             path = this.addEditForm.path;
             console.log(path);
-            this.$axios.post('/graph/addProjects',
+            if(path == "") {
+              this.$message("请上传svg文件！");
+              return;
+            }
+            this.$axios.post('/graph/addElements',
               {
                 "id": id,
-                "uid": uid,
-                "name": name,
-                "path": path,
+                "name":name,
+                "path":path,
               }
             ).then((response)=>{
               if(response.data.code==0){
-                that.tableForm = response.data.projects;
-                that.totalCount = response.data.projects.length;
+                that.tableForm = response.data.elements;
+                that.totalCount = response.data.elements.length;
               }
             })
               .catch(function (error) {
@@ -191,19 +197,22 @@
       update() {
         this.$refs.editForm.validate((valid) =>{
           if(valid){
+            var data = new FormData();
             var that = this;
             name = this.editForm.name;
+            data.append('id',id);
+            data.append('name',name);
+            data.append('path',path);
             console.log(name);
-            console.log(id);
-            this.$axios.post('/graph/setProjects',
+            this.$axios.post('/graph/setElements',
               {
                 "id":id,
                 "name":name,
               }
             ).then((response)=>{
               if(response.data.code==0){
-                that.tableForm = response.data.projects;
-                that.totalCount = response.data.projects.length;
+                that.tableForm = response.data.elements;
+                that.totalCount = response.data.elements.length;
               }
             })
               .catch(function (error) {
@@ -212,42 +221,6 @@
             this.cancel();
           }
         })
-      },
-      //新建任务
-      handleAddEdit() {
-          this.addFormVisible = true;
-      },
-      //处理上传的文件
-      handle_file($event) {
-        var _this = this;
-        var files = event.target.files;
-        if (files != null) {
-          var file = files[0];
-          var reader = new FileReader();
-          reader.onload = function (e) {
-            _this.addEditForm.path = e.target.result;
-            _this.$message("文件已添加");
-          }
-          reader.readAsText(file);
-        }
-      },
-      //打开项目
-      open(id) {
-        Bus.$emit("curProjectId", id);
-        Bus.$emit("changeTab", "graph");
-      },
-      //拉取项目
-      getProject(){
-        this.$axios.post('/graph/getProjects')
-          .then((response)=>{
-            if(response.data.code==0){
-              this.tableForm = response.data.projects;
-              this.totalCount = response.data.projects.length;
-            }
-          })
-          .catch(function (error) {
-            console.log(error);
-          });
       },
       // 分页
       // 每页显示的条数
@@ -262,9 +235,21 @@
         // 改变默认的页数
         this.currentPage=val
       },
+      getElement(){
+        this.$axios.post('/graph/getElements')
+          .then((response)=>{
+            if(response.data.code==0){
+              this.tableForm = response.data.elements;
+              this.totalCount = response.data.elements.length;
+            }
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
+      }
     },
     mounted(){
-      this.getProject();
+      this.getElement();
     },
     data() {
       return {
@@ -284,23 +269,18 @@
         },
         addEditForm: {
           id: '',
-          uid: '',
           name:'',
           path: '',
         },
         editRules: {
-          name: [{required: true, message: '请输入项目名称', trigger: 'change'}],
+          name: [{required: true, message: '请输入元件名称', trigger: 'change'}],
         },
         addEditRules: {
-          name: [{required: true, message: '请输入项目名称', trigger: 'change'}],
-          uid: [{required: true, message: '请输入用户id', trigger: 'change'}],
-          id: [{required: true, message: '请输入项目id', trigger: 'change'}],
+          path: [{required: true, message: '请输入元件名称', trigger: 'change'}],
+          name: [{required: true, message: '请输入元件名称', trigger: 'change'}],
+          id: [{required: true, message: '请输入元件id', trigger: 'change'}],
         },
       }
     }
   }
 </script>
-
-<style scoped>
-
-</style>
