@@ -11,7 +11,6 @@ import javax.persistence.*;
 public class Attribute {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "attribute_id")
     int id;
     @Column(name = "element_id")
