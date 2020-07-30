@@ -130,6 +130,9 @@ public class ProjectController {
             OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(file,false),"UTF-8");
             BufferedWriter br = new BufferedWriter(out);
             String str = project.getPath();
+            if(str.equals("")) {
+                str = "<mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/></root></mxGraphModel>";
+            }
             br.write(str);
             br.flush();
             br.close();

@@ -164,6 +164,12 @@
       },
       //最佳大小
       scaleBest() {
+        graph.selectAll();
+        if(graph.getSelectionCells().length == 0) {
+          this.$message("当前画布没有内容！");
+          return;
+        }
+        graph.clearSelection();
         var bounds = (graph.getGraphBounds());
         var t = graph.view.translate;
         var s = graph.view.scale;
