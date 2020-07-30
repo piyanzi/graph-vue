@@ -148,14 +148,13 @@
               }
             ).then((response) => {
               if (response.data.code == 0) {
-                that.tableForm = response.data.projects;
-                that.totalCount = response.data.projects.length;
+                that.cancel();
               }
             })
               .catch(function (error) {
                 console.log(error);
               });
-            this.cancel();
+
           });
       },
       addEdit(){
@@ -176,15 +175,14 @@
               }
             ).then((response)=>{
               if(response.data.code==0){
-                that.tableForm = response.data.projects;
-                that.totalCount = response.data.projects.length;
+                that.$message("上传成功！");
+                that.cancel();
               }
             })
               .catch(function (error) {
                 console.log(error);
               });
-            this.$message("上传成功！");
-            this.cancel();
+
           }
         })
       },
@@ -202,14 +200,13 @@
               }
             ).then((response)=>{
               if(response.data.code==0){
-                that.tableForm = response.data.projects;
-                that.totalCount = response.data.projects.length;
+                that.cancel();
               }
             })
               .catch(function (error) {
                 console.log(error);
               });
-            this.cancel();
+
           }
         })
       },

@@ -146,14 +146,13 @@
               }
             ).then((response) => {
               if (response.data.code == 0) {
-                that.tableForm = response.data.elements;
-                that.totalCount = response.data.elements.length;
+                that.cancel();
               }
             })
               .catch(function (error) {
                 console.log(error);
               });
-            this.cancel();
+
           });
       },
       cancel() {
@@ -182,15 +181,14 @@
               }
             ).then((response)=>{
               if(response.data.code==0){
-                that.tableForm = response.data.elements;
-                that.totalCount = response.data.elements.length;
+                that.$message("上传成功！");
+                that.cancel();
               }
             })
               .catch(function (error) {
                 console.log(error);
               });
-            this.$message("上传成功！");
-            this.cancel();
+
           }
         })
       },
@@ -211,14 +209,13 @@
               }
             ).then((response)=>{
               if(response.data.code==0){
-                that.tableForm = response.data.elements;
-                that.totalCount = response.data.elements.length;
+                that.cancel();
               }
             })
               .catch(function (error) {
                 console.log(error);
               });
-            this.cancel();
+
           }
         })
       },
@@ -276,7 +273,6 @@
           name: [{required: true, message: '请输入元件名称', trigger: 'change'}],
         },
         addEditRules: {
-          path: [{required: true, message: '请输入元件名称', trigger: 'change'}],
           name: [{required: true, message: '请输入元件名称', trigger: 'change'}],
           id: [{required: true, message: '请输入元件id', trigger: 'change'}],
         },
