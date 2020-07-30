@@ -35,5 +35,35 @@ public class LoginController {
             }
         }
     }
+
+    @CrossOrigin
+    @PostMapping(value = "/graph/getUsers")
+    @ResponseBody
+    public String getUsers() {
+        return userService.findAll();
+    }
+
+    @CrossOrigin
+    @PostMapping(value = "/graph/deleteUsers")
+    @ResponseBody
+    public String deleteUser(@RequestBody User user){
+        return userService.deleteUser(user.getId());
+    }
+
+    @CrossOrigin
+    @PostMapping(value = "/graph/addUsers")
+    @ResponseBody
+    public String addUser(@RequestBody User user){
+        return userService.add(user);
+    }
+
+    @CrossOrigin
+    @PostMapping(value = "/graph/setUsers")
+    @ResponseBody
+    public String setUser(@RequestBody User user){
+        return userService.setUser(user.getId(),user.getUsername(),user.getPassword(),user.getRole());
+    }
+
+
 }
 
