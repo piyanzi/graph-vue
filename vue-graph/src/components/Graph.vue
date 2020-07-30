@@ -350,8 +350,8 @@
       },
       //保存模型到服务器
       saveModel() {
-        if(_this.projectId == "") {
-          _this.$message('未指定项目，请选择项目后再保存！');
+        if(this.projectId == "") {
+          this.$message('未指定项目，请选择项目后再保存！');
           return;
         }
         var enc = new mxCodec(mxUtils.createXmlDocument());
