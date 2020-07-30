@@ -11,7 +11,6 @@ import javax.persistence.*;
 public class Project {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "project_id")
     int id;
     @Column(name = "user_id")

@@ -1,6 +1,8 @@
 package com.example.graphvue.controller;
 
 import com.alibaba.fastjson.JSONObject;
+import com.example.graphvue.pojo.Element;
+import com.example.graphvue.pojo.Project;
 import com.example.graphvue.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -103,5 +105,48 @@ public class ProjectController {
         JSONObject json = new JSONObject();
         json.put("code",0);
         return json.toJSONString();
+    }
+
+
+    @PostMapping(value = "/graph/getProjects")
+    @ResponseBody
+    public String getProjects() {
+        return projectService.findAll();
+    }
+
+    @CrossOrigin
+    @PostMapping(value = "/graph/setProjects")
+    @ResponseBody
+    public String setProject(@RequestBody Project project){
+        return projectService.setProject(project.getId(),project.getName());
+    }
+
+    @CrossOrigin
+    @PostMapping(value = "/graph/addProjects")
+    @ResponseBody
+    public String addProject(@RequestBody Project project){
+        try{
+            File file = new File(path + "/models/" + project.getUid() + "/" + project.getName() + ".xml");
+            OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(file,false),"UTF-8");
+            BufferedWriter br = new BufferedWriter(out);
+            String str = project.getPath();
+            br.write(str);
+            br.flush();
+            br.close();
+            project.setPath("/models/" + project.getUid() + "/" + project.getName() + ".xml");
+        }catch (Exception e) {
+            System.out.println(e);
+            JSONObject json = new JSONObject();
+            json.put("code",1);
+            return json.toJSONString();
+        }
+        return projectService.addProject(project);
+    }
+
+    @CrossOrigin
+    @PostMapping(value = "/graph/deleteProjects")
+    @ResponseBody
+    public String deleteProject(@RequestBody Project project){
+        return projectService.deleteProject(project.getId());
     }
 }
