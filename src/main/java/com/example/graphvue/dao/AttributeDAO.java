@@ -16,7 +16,7 @@ public interface AttributeDAO extends JpaRepository<Attribute,Integer> {
 
     @Transactional
     @Modifying
-    @Query("update Attribute e set e.eid = ?2,e.name = ?3,e.value = ?4 where e.id = ?1")
-    void updateAttribute(int id,int eid,String name,String value);
+    @Query("update Attribute e set e.eid = ?2,e.name = ?3,e.value = ?4,e.unit = ?5 where e.id = ?1")
+    void updateAttribute(int id,int eid,String name,String value,String unit);
 
 }

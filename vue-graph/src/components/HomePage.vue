@@ -10,7 +10,10 @@
     <el-tab-pane label="属性管理" name="third">
       <attribute v-if="isAttributeAlive"></attribute>
     </el-tab-pane>
-    <el-tab-pane label="项目管理" name="fourth">
+    <el-tab-pane label="连接点管理" name="fourth">
+      <connection v-if="isConnectionAlive"></connection>
+    </el-tab-pane>
+    <el-tab-pane label="项目管理" name="fifth">
       <project v-if="isProjectAlive"></project>
     </el-tab-pane>
     <el-tab-pane label="画图" name="graph" style="width: 100%;height: 100%;">
@@ -23,6 +26,7 @@
   import attribute from './Attribute.vue';
   import elements from './Elements.vue';
   import project from './Project.vue';
+  import connection from './Connection.vue';
   import Bus from "../assets/Bus.js";
   import user from './User.vue';
   export default {
@@ -31,6 +35,7 @@
         reloadElement: this.reloadElement,
         reloadProject: this.reloadProject,
         reloadAttribute: this.reloadAttribute,
+        reloadConnection: this.reloadConnection,
         reloadUser: this.reloadUser,
       }
     },
@@ -40,6 +45,7 @@
       "elements": elements,
       "project": project,
       "user": user,
+      "connection":connection
     },
     data() {
       return {
@@ -47,6 +53,7 @@
         isElementAlive: true,
         isProjectAlive: true,
         isAttributeAlive: true,
+        isConnectionAlive: true,
         isUserAlive: true,
       }
     },
@@ -65,6 +72,10 @@
       reloadAttribute() {
         this.isAttributeAlive = false
         this.$nextTick(() => (this.isAttributeAlive = true))
+      },
+      reloadConnection() {
+        this.isConnectionAlive = false
+        this.$nextTick(() => (this.isConnectionAlive = true))
       },
       reloadUser() {
         this.isUserAlive = false

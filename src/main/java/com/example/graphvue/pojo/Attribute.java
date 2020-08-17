@@ -19,6 +19,8 @@ public class Attribute {
     String name;
     @Column(name = "attribute_default_value")
     String value;
+    @Column(name = "attribute_unit")
+    String unit;
 
 
     public void setId(int id) {
@@ -37,6 +39,10 @@ public class Attribute {
         this.value = value;
     }
 
+    public void setUnit(String unit) {
+        this.unit = unit;
+    }
+
     public int getId() {
         return id;
     }
@@ -53,7 +59,9 @@ public class Attribute {
         return value;
     }
 
-
+    public String getUnit() {
+        return unit;
+    }
 
 }
 

@@ -12,15 +12,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
-
 @Controller
 public class AttributeController {
-
     @Autowired
     AttributeService attributeService;
 
@@ -42,7 +35,7 @@ public class AttributeController {
     @PostMapping(value = "/graph/setAttributes")
     @ResponseBody
     public String setAttributes(@RequestBody Attribute attribute) {
-        return attributeService.getAttributes(attribute.getId(),attribute.getEid(),attribute.getName(),attribute.getValue());
+        return attributeService.getAttributes(attribute.getId(),attribute.getEid(),attribute.getName(),attribute.getValue(),attribute.getUnit());
     }
 
     @CrossOrigin

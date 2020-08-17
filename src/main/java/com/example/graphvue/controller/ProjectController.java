@@ -83,7 +83,6 @@ public class ProjectController {
         return s.toString();
     }
 
-
     @PostMapping(value = "/graph/saveModel")
     @ResponseBody
     public String setModelById(@RequestBody JSONObject jsonObject)  {
@@ -106,7 +105,6 @@ public class ProjectController {
         json.put("code",0);
         return json.toJSONString();
     }
-
 
     @PostMapping(value = "/graph/getProjects")
     @ResponseBody

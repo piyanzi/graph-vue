@@ -1,5 +1,5 @@
 <template>
-  <div id="project">
+  <div id="connection">
     <br />
     <el-row>
       <el-col :span="1" class="grid">
@@ -9,7 +9,7 @@
           icon="el-icon-circle-plus-outline"
           size="mini"
           round
-        >新增属性</el-button>
+        >新增连接点</el-button>
       </el-col>
     </el-row>
     <br />
@@ -19,12 +19,10 @@
       ref="tableForm"
       style="width: 100%"
     >
-      <el-table-column prop="id" label="属性id" width="150"></el-table-column>
-      <el-table-column prop="eid" label="元件id" width="150"></el-table-column>
-      <el-table-column prop="name" label="属性名称" width="150"></el-table-column>
-      <el-table-column label="属性类型" width="150"></el-table-column>
-      <el-table-column prop="value" label="默认值" width="150"></el-table-column>
-      <el-table-column prop="unit" label="单位" width="200"></el-table-column>
+      <el-table-column prop="id" label="连接id" width="200"></el-table-column>
+      <el-table-column prop="eid" label="元件id" width="200"></el-table-column>
+      <el-table-column prop="cx" label="连接点横坐标" width="200"></el-table-column>
+      <el-table-column prop="cy" label="连接点纵坐标" width="200"></el-table-column>
       <el-table-column label="操作" width="200pt">
         <template slot-scope="scope">
           <el-button size="small" @click="handleEdit(scope.row)">编辑</el-button>
@@ -44,23 +42,20 @@
       ></el-pagination>
     </div>
 
-    <el-dialog title="新建项目" width="30%" :visible.sync="addFormVisible" @close="closeDialog">
+    <el-dialog title="新建连接点" width="30%" :visible.sync="addFormVisible" @close="closeDialog">
       <!-- 在el-dialog中进行嵌套el-form实现弹出表格的效果 -->
       <el-form :rules="addEditRules" :model="addEditForm" ref="addEditForm">
-        <el-form-item label="属性id" label-width="80px" prop="id">
+        <el-form-item label="连接id" label-width="80px" prop="id">
           <el-input v-model="addEditForm.id" auto-complete="off"></el-input>
         </el-form-item>
         <el-form-item label="元件id" label-width="80px" prop="eid">
           <el-input v-model="addEditForm.eid" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="属性名称" label-width="80px" prop="name">
-          <el-input v-model="addEditForm.name" auto-complete="off"></el-input>
+        <el-form-item label="连接点横坐标" label-width="80px" prop="cx">
+          <el-input v-model="addEditForm.cx" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="默认值" label-width="80px" prop="value">
-          <el-input v-model="addEditForm.value" auto-complete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="单位" label-width="80px" prop="unit">
-          <el-input v-model="addEditForm.unit" auto-complete="off"></el-input>
+        <el-form-item label="连接点纵坐标" label-width="80px" prop="cy">
+          <el-input v-model="addEditForm.cy" auto-complete="off"></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -76,14 +71,11 @@
         <el-form-item label="元件id" label-width="80px" prop="eid">
           <el-input v-model="editForm.eid" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="属性名称" label-width="80px" prop="name">
-          <el-input v-model="editForm.name" auto-complete="off"></el-input>
+        <el-form-item label="连接点横坐标" label-width="80px" prop="cx">
+          <el-input v-model="editForm.cx" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="默认值" label-width="80px" prop="value">
-          <el-input v-model="editForm.value" auto-complete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="单位" label-width="80px" prop="unit">
-          <el-input v-model="editForm.unit" auto-complete="off"></el-input>
+        <el-form-item label="连接点纵坐标" label-width="80px" prop="cy">
+          <el-input v-model="editForm.cy" auto-complete="off"></el-input>
         </el-form-item>
       </el-form>
 
@@ -98,25 +90,23 @@
 
 <script>
 var id;
-var name;
-var value;
 var eid;
-var unit;
+var cx;
+var cy;
 import Bus from "../assets/Bus.js";
 export default {
-  name: "attribute",
-  inject: ["reloadAttribute"],
+  name: "connection",
+  inject: ["reloadConnection"],
   methods: {
     //关闭弹框
     closeDialog() {
       this.addEditForm.id = "";
       this.addEditForm.eid = "";
-      this.addEditForm.name = "";
-      this.addEditForm.value = "";
-      this.addEditForm.unit = "";
+      this.addEditForm.cx = "";
+      this.addEditForm.cy = "";
     },
     cancel() {
-      this.reloadAttribute();
+      this.reloadConnection();
       // 取消的时候直接设置对话框不可见即可
       this.editFormVisible = false;
       this.addFormVisible = false;
@@ -126,9 +116,8 @@ export default {
       this.editForm = row;
       id = row.id;
       eid = row.eid;
-      name = row.name;
-      value = row.value;
-      unit = row.unit;
+      cx = row.cx;
+      cy = row.cy;
       this.editFormVisible = true;
     },
     //删除
@@ -141,7 +130,7 @@ export default {
       }).then(() => {
         id = row.id;
         that.$axios
-          .post("/graph/deleteAttributes", {
+          .post("/graph/deleteConnections", {
             id: id,
           })
           .then((response) => {
@@ -154,26 +143,25 @@ export default {
           });
       });
     },
+
     addEdit() {
       this.$refs.addEditForm.validate((valid) => {
         if (valid) {
           var that = this;
           id = this.addEditForm.id;
           eid = this.addEditForm.eid;
-          name = this.addEditForm.name;
-          value = this.addEditForm.value;
-          unit = this.addEditForm.unit;
+          cx = this.addEditForm.cx;
+          cy = this.addEditForm.cy;
           this.$axios
             .post("/graph/addAttributes", {
               id: id,
               eid: eid,
-              name: name,
-              value: value,
-              unit: unit,
+              cx: cx,
+              cy: cy,
             })
             .then((response) => {
               if (response.data.code == 0) {
-                that.$message("新增属性成功！");
+                that.$message("新增连接点成功！");
                 that.cancel();
               }
             })
@@ -183,21 +171,20 @@ export default {
         }
       });
     },
+
     update() {
       this.$refs.editForm.validate((valid) => {
         if (valid) {
           var that = this;
-          name = this.editForm.name;
-          value = this.editForm.value;
-          unit = this.editForm.unit;
+          cx = this.editForm.cx;
+          cy = this.editForm.cy;
           eid = this.editForm.eid;
           this.$axios
-            .post("/graph/setAttributes", {
+            .post("/graph/setConnections", {
               id: id,
               eid: eid,
-              name: name,
-              value: value,
-              unit: unit,
+              cx: cx,
+              cy: cy,
             })
             .then((response) => {
               if (response.data.code == 0) {
@@ -214,13 +201,13 @@ export default {
     handleAddEdit() {
       this.addFormVisible = true;
     },
-    getAttribute() {
+    getConnection() {
       this.$axios
-        .post("/graph/getAllAttributes")
+        .post("/graph/getAllConnections")
         .then((response) => {
           if (response.data.code == 0) {
-            this.tableForm = response.data.attributes;
-            this.totalCount = response.data.attributes.length;
+            this.tableForm = response.data.connections;
+            this.totalCount = response.data.connections.length;
           }
         })
         .catch(function (error) {
@@ -242,7 +229,7 @@ export default {
     },
   },
   mounted() {
-    this.getAttribute();
+    this.getConnection();
   },
   data() {
     return {
@@ -258,32 +245,24 @@ export default {
       editFormVisible: false,
       addFormVisible: false,
       editForm: {
-        name: "",
         eid: "",
-        value: "",
-        unit: "",
+        cx: "",
+        cy: "",
       },
       addEditForm: {
         id: "",
         eid: "",
-        name: "",
-        value: "",
-        unit: "",
+        cx: "",
+        cy: "",
       },
       editRules: {
-        name: [
-          { required: true, message: "请输入属性名称", trigger: "change" },
-        ],
         eid: [{ required: true, message: "请输入元件id", trigger: "change" }],
-        value: [{ required: true, message: "请输入默认值", trigger: "change" }],
-        unit: [{ required: true, message: "请输入单位", trigger: "change" }],
+        cx: [{ required: true, message: "请输入连接点横坐标", trigger: "change" }],
+        cy: [{ required: true, message: "请输入连接点纵坐标", trigger: "change" }],
       },
       addEditRules: {
-        unit: [{ required: true, message: "请输入单位", trigger: "change" }],
-        value: [{ required: true, message: "请输入默认值", trigger: "change" }],
-        name: [
-          { required: true, message: "请输入属性名称", trigger: "change" },
-        ],
+        cx: [{ required: true, message: "请输入连接点横坐标", trigger: "change" }],
+        cy: [{ required: true, message: "请输入连接点纵坐标", trigger: "change" }],
         eid: [{ required: true, message: "请输入元件id", trigger: "change" }],
         id: [{ required: true, message: "请输入属性id", trigger: "change" }],
       },
@@ -291,6 +270,7 @@ export default {
   },
 };
 </script>
+
 
 <style scoped>
 </style>
