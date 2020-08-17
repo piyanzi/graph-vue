@@ -33,22 +33,12 @@
             <el-button type="success" size="small" @click="viewXML" icon="el-icon-monitor">展示XML</el-button>
           </el-button-group>
           <el-button-group>
-            <el-button
-              type="success"
-              size="small"
-              @click="_importJSON"
-              icon="el-icon-download"
-            >导入JSON</el-button>
+            <el-button type="success" size="small" @click="_importJSON" icon="el-icon-download">导入JSON</el-button>
             <el-button type="success" size="small" @click="exportJSON" icon="el-icon-upload2">导出JSON</el-button>
             <el-button type="success" size="small" @click="viewJSON" icon="el-icon-monitor">JSON展示</el-button>
           </el-button-group>
           <el-button-group>
-            <el-button
-              type="success"
-              size="small"
-              @click="exportPDF"
-              icon="el-icon-picture-outline"
-            >导出PDF</el-button>
+            <el-button type="success" size="small" @click="exportPDF" icon="el-icon-picture-outline">导出PDF</el-button>
           </el-button-group>
         </el-row>
       </div>
