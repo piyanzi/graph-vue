@@ -58,7 +58,7 @@
                             that.$router.push({path: '/homePage'});
                           }
                           else if(response.data.role == 0){
-                            that.$router.push({path: '/graph'});
+                            that.$router.push({path: '/userPage'});
                           }
                           else{
                             that.$alert('账号或密码错误！', '提示', {

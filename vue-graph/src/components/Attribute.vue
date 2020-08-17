@@ -134,7 +134,7 @@ export default {
     //删除
     handleDelete(row) {
       var that = this;
-      this.$confirm("永久删除该项目, 是否继续?", "提示", {
+      this.$confirm("永久删除此条属性, 是否继续?", "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         type: "warning",

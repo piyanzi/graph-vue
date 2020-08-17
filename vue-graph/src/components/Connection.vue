@@ -45,16 +45,16 @@
     <el-dialog title="新建连接点" width="30%" :visible.sync="addFormVisible" @close="closeDialog">
       <!-- 在el-dialog中进行嵌套el-form实现弹出表格的效果 -->
       <el-form :rules="addEditRules" :model="addEditForm" ref="addEditForm">
-        <el-form-item label="连接id" label-width="80px" prop="id">
+        <el-form-item label="连接id" label-width="120px" prop="id">
           <el-input v-model="addEditForm.id" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="元件id" label-width="80px" prop="eid">
+        <el-form-item label="元件id" label-width="120px" prop="eid">
           <el-input v-model="addEditForm.eid" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="连接点横坐标" label-width="80px" prop="cx">
+        <el-form-item label="连接点横坐标" label-width="120px" prop="cx">
           <el-input v-model="addEditForm.cx" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="连接点纵坐标" label-width="80px" prop="cy">
+        <el-form-item label="连接点纵坐标" label-width="120px" prop="cy">
           <el-input v-model="addEditForm.cy" auto-complete="off"></el-input>
         </el-form-item>
       </el-form>
@@ -68,13 +68,13 @@
     <el-dialog title="编辑" width="30%" :visible.sync="editFormVisible">
       <!-- 在el-dialog中进行嵌套el-form实现弹出表格的效果 -->
       <el-form :rules="editRules" :model="editForm" ref="editForm">
-        <el-form-item label="元件id" label-width="80px" prop="eid">
+        <el-form-item label="元件id" label-width="120px" prop="eid">
           <el-input v-model="editForm.eid" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="连接点横坐标" label-width="80px" prop="cx">
+        <el-form-item label="连接点横坐标" label-width="120px" prop="cx">
           <el-input v-model="editForm.cx" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="连接点纵坐标" label-width="80px" prop="cy">
+        <el-form-item label="连接点纵坐标" label-width="120px" prop="cy">
           <el-input v-model="editForm.cy" auto-complete="off"></el-input>
         </el-form-item>
       </el-form>
@@ -123,7 +123,7 @@ export default {
     //删除
     handleDelete(row) {
       var that = this;
-      this.$confirm("永久删除该项目, 是否继续?", "提示", {
+      this.$confirm("永久删除该连接点, 是否继续?", "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         type: "warning",
@@ -153,7 +153,7 @@ export default {
           cx = this.addEditForm.cx;
           cy = this.addEditForm.cy;
           this.$axios
-            .post("/graph/addAttributes", {
+            .post("/graph/addConnections", {
               id: id,
               eid: eid,
               cx: cx,
