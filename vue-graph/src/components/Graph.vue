@@ -231,6 +231,9 @@ export default {
       graph.selectAll();
       graph.removeCells(graph.getSelectionCells());
       this.ifProject = false;
+      for(let i=0;i<elementNameCountList.length;++i) {
+        elementNameCountList[i] = 1;
+      }
     },
     //关闭Edge
     close() {
