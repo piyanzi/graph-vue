@@ -83,10 +83,29 @@
             <i class="el-icon-delete" @click="delCurAttr(index)"></i>
           </el-form-item>
         </div>
+        <div v-for="(item2, index2) in form.connections" :key="'2'+index2">
+          <el-form-item label="横坐标0-1" label-width="120px" :prop="'connections.' + index2 + '.x'"
+                        :rules="[
+              {pattern: /^(1|0(\.\d{1,2})?)$/, message: '请输入0-1之间的两位小数', trigger: 'change'},
+              {required: true, message: '横坐标不能为空', trigger: 'change'}, ]">
+            <el-input v-model="item2.x" placeholder="请输入横坐标"></el-input>
+          </el-form-item>
+          <el-form-item label="纵坐标0-1" label-width="120px" :prop="'connections.' + index2 + '.y'"
+                        :rules="[
+              {pattern: /^(1|0(\.\d{1,2})?)$/, message: '请输入0-1之间的两位小数', trigger: 'change'},
+              {required: true, message: '纵坐标不能为空', trigger: 'change'}, ]">
+            <el-input v-model="item2.y" placeholder="请输入纵坐标"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <i class="el-icon-delete" @click="delCurConnection(index2)"></i>
+          </el-form-item>
+        </div>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button id="addAttr" @click="addAttr">新增属性</el-button>
         <el-button id="delAttr" @click="delAttr">删除属性</el-button>
+        <el-button id="addConnection" @click="addConnection">新增连接点</el-button>
+        <el-button id="delConnection" @click="delConnection">删除连接点</el-button>
         <el-button type="primary" @click="addNewElement('form')">提交</el-button>
       </div>
     </el-dialog>
@@ -167,6 +186,7 @@ export default {
       form: {
         itemName: "",
         attrs: [],
+        connections: [],
       },
       projectId: "",
       rules: {
@@ -520,18 +540,48 @@ export default {
     delCurAttr(index) {
       this.form.attrs.splice(index, 1);
     },
+    //动态新增connection
+    addConnection() {
+      this.form.connections.push({
+        x: "",
+        y: "",
+      });
+    },
+    //删除最后一个connection
+    delConnection() {
+      this.form.connections.splice(-1, 1);
+    },
+    //删除当前connection
+    delCurConnection(index) {
+      this.form.connections.splice(index, 1);
+    },
     //拖拽新增节点类型
     addNewElement(formName) {
       this.$refs[formName].validate((valid) => {
         if (valid) {
           var type = this.$options.methods.createElement(this.form.itemName);
+          var eid = elementNameCountList.length;
+          console.log(eid);
+          elementNameCountList[eid] = 1;
           for (var index in this.form.attrs) {
             type.setAttribute(
               this.form.attrs[index].attrName,
               this.form.attrs[index].attrValue + "<>" + this.form.attrs[index].attrUnit,
             );
           }
-          this.handleDrop(graph, curFile, curX, curY, type);
+          var curConnection = {};
+          curConnection["id"] = eid;
+          var connect = [];
+          for (var index in this.form.connections) {
+            var pair = {};
+            pair["x"] = this.form.connections[index].x;
+            pair["y"] = this.form.connections[index].y;
+            pair["perimeter"] = true;
+            connect.push(pair);
+          }
+          curConnection["connections"] = connect;
+          elementConnectionsList.push(curConnection);
+          this.handleDrop(graph, curFile, curX, curY, type, eid);
           this.dialogFormVisible = false;
           this.form.itemName = "";
           this.form.attrs = [];
@@ -738,6 +788,8 @@ export default {
         graph.removeCells();
       }
     });
+    //应用自定义规则
+    judgeConnection(graph);
     //设置连接线为折线
     graph.connectionHandler.createEdgeState = function (me) {
       var edge = graph.createEdge(
@@ -813,13 +865,29 @@ export default {
     //允许左键框选多个节点移动
     new mxRubberband(graph);
     //元件重命名重写
-    graph.cellLabelChanged = function(cell, newValue, autoSize) {
-      var newType = doc.createElement(newValue);
-      for(var i=0;i<cell.value.attributes["length"];++i) {
-        newType.setAttribute(cell.value.attributes[i]["nodeName"],cell.value.attributes[i]["nodeValue"]);
+    graph.convertValueToString = function(cell) {
+      if(cell.isVertex()) {
+        return cell.getAttribute("名称").slice(0,-2);
+      } else {
+        if(cell.value != null) {
+          return cell.value.nodeName;
+        }
       }
-      cell.value = newType;
-      graph.refresh(cell);
+    };
+    graph.cellLabelChanged = function(cell, newValue, autoSize) {
+      if(cell.isVertex()) {
+        cell.value.setAttribute("名称", newValue + "<>");
+        graph.refresh(cell);
+      } else {
+        if(cell.value != null) {
+          var newType = doc.createElement(newValue);
+          for(var i=0;i<cell.value.attributes["length"];++i) {
+            newType.setAttribute(cell.value.attributes[i]["nodeName"],cell.value.attributes[i]["nodeValue"]);
+          }
+          cell.value = newType;
+          graph.refresh(cell);
+        }
+      }
     };
     //撤销重做
     undoManager = new mxUndoManager();
@@ -859,6 +927,7 @@ export default {
         curY = y;
         _this.dialogFormVisible = true;
         document.getElementById("addAttr").click();
+        document.getElementById("addConnection").click();
       }
     });
     //添加监听函数
@@ -866,58 +935,45 @@ export default {
         selectionChanged(graph);
       });
 
+    //自定义规则
+    function judgeConnection(graph) {
+      graph.multiplicities.push(new mxMultiplicity(
+        true, "分输站", null, null, 0, 0, null,
+        "分输站不允许连接到其他元件！",
+        "分输站不允许连接到其他元件！",true));
+      graph.multiplicities.push(new mxMultiplicity(
+        true, '离心压缩机', null, null, 1, 2, ['油库'],
+        '离心压缩机必须指向1或2个油库！',
+        '离心压缩机必须指向油库！',true));
+      graph.multiplicities.push(new mxMultiplicity(
+        false, '站场', null, null, 1, 1, ['油库'],
+        '站场只能有一个来源元件！',
+        '站场不能被油库指向！',false));
+    }
+
     //创建自定义菜单（删除,全选）
     function createPopupMenu(graph, menu, cell, evt) {
       if (cell != null) {
         menu.addItem("删除", null, function () {
           graph.removeCells();
         });
-        // menu.addItem("查看属性", null, function () {
-        //   //graph.removeCells();
-        //   //var cell2 = graph.getSelectionCell();
-        //   //mxUtils.popup(cell2.getId(),true);
-        //   var doc = mxUtils.createXmlDocument();
-        //   var node = doc.createElement("MyNode");
-        //   node.setAttribute("label", "MyLabel");
-        //   node.setAttribute("attribute1", "value1");
-        //   var cell2 = graph.getSelectionCell();
-        //   cell2.setValue(node);
-        //   graph.refresh();
-        //   mxUtils.popup(cell2.getAttribute("attribute1"),true);
-        // });
         menu.addItem("属性", null, function () {
-          //graph.removeCells();
-          //_this.editFormVisible = true;
-          //cell.value.nodeName
-          //this.form.itemName
           var cell2 = graph.getSelectionCell();
           if (cell2.value == null){
             _this.editForm.eid = "";
-            _this.editForm.name = "";
-            _this.editForm.value = "";
-            _this.editForm.unit = "";
-          }
-          else {
+            _this.editForm.attrs = [];
+          } else {
             _this.editForm.eid = cell2.value.nodeName;
-            _this.editForm.name = cell2.value.attributes[0].nodeName;
-            _this.editForm.value = cell2.value.attributes[0].nodeValue;
-            _this.editForm.unit = cell2.value.attributes[1].nodeValue;
-            //mxUtils.popup(cell2.value.nodeName,true);
-            //mxUtils.popup(cell.value.attributes[0].nodeName + ":" + cell.value.attributes[0].nodeValue,true);
+            for(var i=0;i<cell2.value.attributes["length"];++i) {
+              var item = {};
+              var strs = cell2.value.attributes[i]["nodeValue"].split("<>");
+              item["attrName"] = cell2.value.attributes[i]["nodeName"];
+              item["attrValue"] = strs[0];
+              item["attrUnit"] = strs[1];
+              _this.editForm.attrs.push(item);
+            }
           }
           _this.editFormVisible = true;
-          //_this.editForm.eid = "123";
-          //update();
-          // var cell2 = graph.getSelectionCell();
-          // var doc = mxUtils.createXmlDocument();
-          // var node = doc.createElement(name);
-          // node.setAttribute(name, value);
-          // node.setAttribute("单位", unit);
-          // cell2.setValue(node);
-          // graph.refresh();
-          //mxUtils.popup(cell2.getAttribute("name"),true);
-          //_this.editFormVisible = false;
-          //mxUtils.popup(_this.editForm.name,true);
         });
         // menu.addItem("旋转", null, function () {
         //   graph.rotate90();
@@ -1013,6 +1069,7 @@ export default {
         image["src"] +
         ";verticalLabelPosition=bottom;verticalAlign=top";
       var constraints = [];
+      //自动命名
       var name = "";
       if(elementNameCountList[id] < 10) {
         name = type.nodeName + "0" + elementNameCountList[id];
@@ -1022,10 +1079,13 @@ export default {
         name = type.nodeName + elementNameCountList[id];
         elementNameCountList[id]++;
       }
-      var newType = doc.createElement(name);
+      //根据命名复制类型
+      var newType = doc.createElement(type.nodeName);
+      newType.setAttribute("名称",name+"<>");
       for(var i=0;i<type.attributes["length"];++i) {
         newType.setAttribute(type.attributes[i]["nodeName"],type.attributes[i]["nodeValue"]);
       }
+      //添加连接点
       for(var index in elementConnectionsList) {
         if(elementConnectionsList[index]["id"] == id) {
           constraints = elementConnectionsList[index]["connections"];
@@ -1103,7 +1163,7 @@ export default {
     }
 
     //拖拽生成节点，将该图片加入侧边工具栏
-    _this.handleDrop = function (graph, file, x, y, type) {
+    _this.handleDrop = function (graph, file, x, y, type, eid) {
       if (file.type.substring(0, 5) == "image") {
         //生成节点
         var reader = new FileReader();
@@ -1119,10 +1179,32 @@ export default {
                 data.substring(0, semi) +
                 data.substring(data.indexOf(",", semi + 1));
             }
+            var name = "";
+            if(elementNameCountList[eid] < 10) {
+              name = type.nodeName + "0" + elementNameCountList[eid];
+              elementNameCountList[eid]++;
+            }
+            else {
+              name = type.nodeName + elementNameCountList[eid];
+              elementNameCountList[eid]++;
+            }
+            var newType = doc.createElement(type.nodeName);
+            newType.setAttribute("名称",name+"<>");
+            for(var i=0;i<type.attributes["length"];++i) {
+              newType.setAttribute(type.attributes[i]["nodeName"],type.attributes[i]["nodeValue"]);
+            }
+            var constraints = [];
+            for(var index in elementConnectionsList) {
+              if(elementConnectionsList[index]["id"] == eid) {
+                constraints = elementConnectionsList[index]["connections"];
+                break;
+              }
+            }
             var parent = graph.getDefaultParent();
-            var vertex = graph.insertVertex(parent, null, type, x, y, w, h,
+            var vertex = graph.insertVertex(parent, null, newType, x, y, w, h,
               "shape=image;image=" + data + ";verticalLabelPosition=bottom;verticalAlign=top"
             );
+            vertex["constraints"] = constraints;
           };
           img.src = data;
           var item = document.createElement("img");
@@ -1132,22 +1214,22 @@ export default {
           var center = document.createElement("center");
           center.appendChild(item);
           tbContainer.appendChild(center);
-          addedCustomFunct(graph, item, type);
+          addedCustomFunct(graph, item, type, eid);
         };
         reader.readAsDataURL(file);
       }
     };
 
     //新添加图片（data格式）拖拽函数的动作
-    function addedCustomFunct(graph, image, type) {
+    function addedCustomFunct(graph, image, type, eid) {
       var funct = function (graph, evt, cell, x, y) {
-        addDataCell(graph, image, x, y, type);
+        addDataCell(graph, image, x, y, type, eid);
       };
       mxUtils.makeDraggable(image, graph, funct, null);
     }
 
     //toolbar拖拽添加data格式节点
-    function addDataCell(graph, image, x, y, type) {
+    function addDataCell(graph, image, x, y, type, eid) {
       var data = image["src"];
       var img = new Image();
       img.onload = function () {
@@ -1159,10 +1241,32 @@ export default {
             data.substring(0, semi) +
             data.substring(data.indexOf(",", semi + 1));
         }
+        var name = "";
+        if(elementNameCountList[eid] < 10) {
+          name = type.nodeName + "0" + elementNameCountList[eid];
+          elementNameCountList[eid]++;
+        }
+        else {
+          name = type.nodeName + elementNameCountList[eid];
+          elementNameCountList[eid]++;
+        }
+        var newType = doc.createElement(type.nodeName);
+        newType.setAttribute("名称",name+"<>");
+        for(var i=0;i<type.attributes["length"];++i) {
+          newType.setAttribute(type.attributes[i]["nodeName"],type.attributes[i]["nodeValue"]);
+        }
+        var constraints = [];
+        for(var index in elementConnectionsList) {
+          if(elementConnectionsList[index]["id"] == eid) {
+            constraints = elementConnectionsList[index]["connections"];
+            break;
+          }
+        }
         var parent = graph.getDefaultParent();
-        var vertex = graph.insertVertex(parent, null, type, x, y, w, h,
+        var vertex = graph.insertVertex(parent, null, newType, x, y, w, h,
           "shape=image;image=" + data + ";verticalLabelPosition=bottom;verticalAlign=top"
         );
+        vertex["constraints"] = constraints;
       };
       img.src = data;
     }
@@ -1177,6 +1281,7 @@ export default {
       var tdInput = document.createElement("td");
       var input = document.createElement("input");
       input.type = "text";
+      input.style = "width: 130px;";
       input.value = values[0];
       tdInput.appendChild(input);
       tr.appendChild(tdInput);
@@ -1282,7 +1387,7 @@ export default {
   position: absolute;
   top: 70px;
   left: 120px;
-  right: 300px;
+  right: 330px;
   bottom: 10px;
   border: thin solid #2e2d3c;
 }
@@ -1291,7 +1396,7 @@ export default {
   overflow: auto;
   position: absolute;
   background-color: #f2f6fc;
-  width: 300px;
+  width: 330px;
   right: 0;
   bottom: 10px;
   top: 40px;
