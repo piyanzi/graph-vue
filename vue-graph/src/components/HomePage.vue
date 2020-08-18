@@ -30,6 +30,7 @@
   import Bus from "../assets/Bus.js";
   import user from './User.vue';
   export default {
+    name: "homePage",
     provide(){
       return {
         reloadElement: this.reloadElement,

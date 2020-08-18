@@ -4,7 +4,8 @@
       <div id="headContainer" class="head-container">
         <el-row style="margin-left: 120px">
           <el-button-group>
-            <el-button type="primary" size="small" @click="readModel" icon="el-icon-refresh">读取模型</el-button>
+            <el-button id="readModel" type="primary" size="small" @click="chooseProject">读取/新建模型</el-button>
+            <el-button type="primary" size="small" @click="readModel" icon="el-icon-refresh">刷新模型</el-button>
             <el-button type="primary" size="small" @click="saveModel" icon="el-icon-upload">保存模型</el-button>
           </el-button-group>
           <el-button-group>
@@ -25,8 +26,14 @@
             <el-button type="primary" size="small" @click="scaleRaw">原始大小</el-button>
             <el-button type="primary" size="small" @click="scaleBest">最佳大小</el-button>
           </el-button-group>
+          <el-button-group>
+            <el-button type="primary" size="small" @click="checkGraph" icon="el-icon-document-checked">检查项目</el-button>
+          </el-button-group>
+          <el-button-group>
+            <el-button v-if="ifProject" type="danger" size="small" @click="exit">退出项目</el-button>
+          </el-button-group>
         </el-row>
-        <el-row style="margin-left: 120px">
+        <el-row style="margin-left: 120px;margin-top: 2px;">
           <el-button-group>
             <el-button type="success" size="small" @click="_import" icon="el-icon-download">导入XML</el-button>
             <el-button type="success" size="small" @click="exportXML" icon="el-icon-upload2">导出XML</el-button>
@@ -35,7 +42,7 @@
           <el-button-group>
             <el-button type="success" size="small" @click="_importJSON" icon="el-icon-download">导入JSON</el-button>
             <el-button type="success" size="small" @click="exportJSON" icon="el-icon-upload2">导出JSON</el-button>
-            <el-button type="success" size="small" @click="viewJSON" icon="el-icon-monitor">JSON展示</el-button>
+            <el-button type="success" size="small" @click="viewJSON" icon="el-icon-monitor">展示JSON</el-button>
           </el-button-group>
           <el-button-group>
             <el-button type="success" size="small" @click="exportPDF" icon="el-icon-picture-outline">导出PDF</el-button>
@@ -47,29 +54,10 @@
       <div id="rightContainer" class="right-container"></div>
     </div>
 
-    <input
-      type="file"
-      id="importXML"
-      @change="handle_file($event)"
-      accept=".xml"
-      style="display: none;"
-    />
+    <input type="file" id="importXML" @change="handle_file($event)" accept=".xml" style="display: none;"/>
+    <input type="file" id="importJSON" @change="handle_file2($event)" accept=".json" style="display: none;"/>
 
-    <input
-      type="file"
-      id="importJSON"
-      @change="handle_file2($event)"
-      accept=".json"
-      style="display: none;"
-    />
-
-    <el-dialog
-      title="新增元件赋值"
-      :visible.sync="dialogFormVisible"
-      width="40%"
-      @close="closeDialog"
-      center
-    >
+    <el-dialog title="新增元件赋值" :visible.sync="dialogFormVisible" width="50%" @close="closeDialog" center>
       <el-form ref="form" :model="form" :rules="rules" :inline="true">
         <el-form-item label="元件名称" label-width="120px" prop="itemName">
           <el-input v-model="form.itemName" placeholder="请输入元件名称"></el-input>
@@ -88,13 +76,13 @@
           <el-form-item label="属性值" label-width="120px" :prop="'attrs.' + index + '.attrValue'">
             <el-input v-model="item.attrValue" placeholder="请输入属性值"></el-input>
           </el-form-item>
+          <el-form-item label="单位" label-width="120px" :prop="'attrs.' + index + '.attrUnit'">
+            <el-input v-model="item.attrUnit" placeholder="请输入单位"></el-input>
+          </el-form-item>
           <el-form-item>
             <i class="el-icon-delete" @click="delCurAttr(index)"></i>
           </el-form-item>
         </div>
-        <el-form-item label="单位" label-width="120px" prop="itemName">
-          <el-input v-model="form.attrUnit" placeholder="请输入单位"></el-input>
-        </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button id="addAttr" @click="addAttr">新增属性</el-button>
@@ -103,25 +91,42 @@
       </div>
     </el-dialog>
 
-    <el-dialog title="编辑" width="30%" :visible.sync="editFormVisible">
-      <el-form :rules="editRules" :model="editForm" ref="editForm">
-        <el-form-item label="元件名称" label-width="80px" prop="eid">
-          <el-input v-model="editForm.eid" auto-complete="off"></el-input>
+    <el-dialog title="编辑连接线" :visible.sync="editFormVisible" width="50%" @close="close" center>
+      <el-form ref="editForm" :model="editForm" :rules="editRules" :inline="true">
+        <el-form-item label="连接线名称" label-width="120px" prop="eid">
+          <el-input v-model="editForm.eid" placeholder="请输入连接线名称"></el-input>
         </el-form-item>
-        <el-form-item label="属性名称" label-width="80px" prop="name">
-          <el-input v-model="editForm.name" auto-complete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="属性名" label-width="80px" prop="value">
-          <el-input v-model="editForm.value" auto-complete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="单位" label-width="80px" prop="unit">
-          <el-input v-model="editForm.unit" auto-complete="off"></el-input>
-        </el-form-item>
+        <div v-for="(item, index) in editForm.attrs" :key="index">
+          <el-form-item
+            label="属性名"
+            label-width="120px"
+            :prop="'attrs.' + index + '.attrName'"
+            :rules="[
+              {pattern: /^[\u4E00-\u9FA5A-Za-z].*$/, message: '不能以数字或特殊字符开头', trigger: 'change'},
+              {required: true, message: '属性名不能为空', trigger: 'change'}, ]"
+          >
+            <el-input v-model="item.attrName" placeholder="请输入属性名"></el-input>
+          </el-form-item>
+          <el-form-item label="属性值" label-width="120px" :prop="'attrs.' + index + '.attrValue'">
+            <el-input v-model="item.attrValue" placeholder="请输入属性值"></el-input>
+          </el-form-item>
+          <el-form-item label="单位" label-width="120px" :prop="'attrs.' + index + '.attrUnit'">
+            <el-input v-model="item.attrUnit" placeholder="请输入单位"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <i class="el-icon-delete" @click="delCurEdgeAttr(index)"></i>
+          </el-form-item>
+        </div>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="cancel">取 消</el-button>
-        <el-button type="primary" @click="update">确 定</el-button>
+        <el-button id="addEdgeAttr" @click="addEdgeAttr">新增属性</el-button>
+        <el-button id="delEdgeAttr" @click="delEdgeAttr">删除属性</el-button>
+        <el-button type="primary" @click="update">提交</el-button>
       </div>
+    </el-dialog>
+
+    <el-dialog title="打开项目" :visible.sync="projectFormVisible" width="60%" center>
+      <Project></Project>
     </el-dialog>
 
   </div>
@@ -129,24 +134,9 @@
 
 <script>
 import Bus from "../assets/Bus.js";
-// const {mxGraph, mxClient, mxCodec, mxUtils, mxConnectionHandler, mxEvent, mxGraphHandler,
-//   mxKeyHandler, mxImage, mxGraphModel, mxRubberband, mxUndoManager, mxForm, mxRectangle, mxPrintPreview} = mxgraph;
-// import {
-//   mxToolbar,
-//   mxGraphModel,
-//   mxGraph,
-//   mxCell,
-//   mxGeometry,
-//   mxEvent,
-//   mxUtils,
-//   mxConnectionHandler,
-//   mxImage,
-//   mxKeyHandler,
-//   mxGraphHandler,
-//   mxRubberband,
-//   mxUndoManager,
-//   mxClient
-// } from 'mxgraph/javascript/mxClient'
+import global from "../assets/global";
+import Project from "./Project";
+import {UnionSet} from "../assets/UnionSet";
 var graph;
 var model;
 var tbContainer;
@@ -164,16 +154,14 @@ var elementAttrList = [];
 var curX;
 var curY;
 var curFile;
+//元件连接点位置信息
+var elementConnectionsList = [];
+//元件命名计数信息
+var elementNameCountList = [];
 
-var eid;
-var name;
-var value;
-var unit;
-//旋转
-mxVertexHandler.prototype.rotationEnabled = true;
 export default {
   name: "graph",
-  inject: ["reloadAttribute"],
+  components: {Project},
   data() {
     return {
       form: {
@@ -193,40 +181,61 @@ export default {
       },
       dialogFormVisible: false,
       editFormVisible: false,
+      projectFormVisible: false,
+      ifProject: false,
+      nextProjectId: "",
       editForm: {
-        name: "",
         eid: "",
-        value: "",
-        unit: "",
+        attrs: [],
       },
       editRules: {
-        name: [
-          { required: true, message: "请输入属性名称", trigger: "change" },
-        ],
-        eid: [{ required: true, message: "请输入元件id", trigger: "change" }],
-        value: [{ required: true, message: "请输入默认值", trigger: "change" }],
-        unit: [{ required: true, message: "请输入单位", trigger: "change" }],
+        eid: [
+          {
+            pattern: /^[\u4E00-\u9FA5A-Za-z].*$/,
+            message: "不能以数字或特殊字符开头",
+            trigger: "change",
+          },
+          { required: true, message: "请输入连接线名称", trigger: "change" }],
       }
     };
   },
   methods: {
-    //取消
-    cancel() {
-      //this.reloadAttribute();
-      // 取消的时候直接设置对话框不可见即可
-      this.editFormVisible = false;
+    //选择/新建模型
+    chooseProject() {
+      this.projectFormVisible = true;
     },
-    //更新
+    //退出
+    exit() {
+      this.saveModel();
+      this.projectId = "";
+      graph.selectAll();
+      graph.removeCells(graph.getSelectionCells());
+      this.ifProject = false;
+    },
+    //关闭Edge
+    close() {
+      this.editForm.eid = "";
+      this.editForm.attrs = [];
+    },
+    //更新Edge
     update() {
       this.$refs.editForm.validate((valid) => {
-        var cell2 = graph.getSelectionCell();
-        var doc = mxUtils.createXmlDocument();
-        var node = doc.createElement(this.editForm.eid);
-        node.setAttribute(this.editForm.name, this.editForm.value);
-        node.setAttribute("单位", this.editForm.unit);
-        cell2.setValue(node);
-        graph.refresh();
-        this.editFormVisible = false;
+        if(valid) {
+          var cell2 = graph.getSelectionCell();
+          var doc = mxUtils.createXmlDocument();
+          var node = doc.createElement(this.editForm.eid);
+          for (var index in this.editForm.attrs) {
+            node.setAttribute(
+              this.editForm.attrs[index].attrName,
+              this.editForm.attrs[index].attrValue + "<>" + this.editForm.attrs[index].attrUnit,
+            );
+          }
+          cell2.setValue(node);
+          graph.refresh(cell2);
+          this.editFormVisible = false;
+          this.editForm.eid = "";
+          this.editForm.attrs = [];
+        }
       });
     },
     //放大
@@ -249,13 +258,6 @@ export default {
         graph.removeCells(graph.getSelectionCells());
       }
     },
-
-    //旋转
-    // rotate() {
-    //   if(graph.isEnabled()) {
-    //     graph.getSelectionCells().rotate90();
-    //   }
-    // },
     //撤销
     undo() {
       undoManager.undo();
@@ -269,6 +271,7 @@ export default {
       graph.selectAll();
       if (graph.getSelectionCells().length == 0) {
         this.$message("当前画布没有内容！");
+        graph.clearSelection();
         return;
       }
       graph.clearSelection();
@@ -306,16 +309,14 @@ export default {
     _import() {
       document.getElementById("importXML").click();
     },
-
     //导入JSON
     _importJSON() {
       document.getElementById("importJSON").click();
     },
-
     //导出PDF
     exportPDF() {
       var autoOrigin = true;
-      var printconnectionsScale = 1;
+      var printScale = 1;
       printScale *= 0.75;
       var pf = graph.pageFormat;
       var scale = 1 / graph.pageScale;
@@ -380,7 +381,6 @@ export default {
         }
       } catch (e) {}
     },
-
     //展示JSON
     viewJSON() {
       var enc = new mxCodec(mxUtils.createXmlDocument());
@@ -393,7 +393,6 @@ export default {
         true
       );
     },
-
     //导出JSON
     exportJSON() {
       var enc = new mxCodec(mxUtils.createXmlDocument());
@@ -422,14 +421,12 @@ export default {
       }
       //mxUtils.popup(jsonObj, true);
     },
-
     //展示XML
     viewXML() {
       var enc = new mxCodec(mxUtils.createXmlDocument());
       var node = enc.encode(graph.getModel());
       mxUtils.popup(mxUtils.getPrettyXml(node), true);
     },
-
     //导出XML
     exportXML() {
       var enc = new mxCodec(mxUtils.createXmlDocument());
@@ -472,7 +469,6 @@ export default {
       elementAttrList.push(eletype);
       return eletype;
     },
-
     //处理上传的xml文件
     handle_file(event) {
       var files = event.target.files;
@@ -508,12 +504,12 @@ export default {
         reader.readAsText(file);
       }
     },
-
     //动态新增input
     addAttr() {
       this.form.attrs.push({
         attrName: "",
         attrValue: "",
+        attrUnit: "",
       });
     },
     //删除最后一个input
@@ -532,7 +528,7 @@ export default {
           for (var index in this.form.attrs) {
             type.setAttribute(
               this.form.attrs[index].attrName,
-              this.form.attrs[index].attrValue + " " + this.form.attrUnit
+              this.form.attrs[index].attrValue + "<>" + this.form.attrs[index].attrUnit,
             );
           }
           this.handleDrop(graph, curFile, curX, curY, type);
@@ -549,16 +545,67 @@ export default {
       this.form.itemName = "";
       this.form.attrs = [];
     },
+    //动态新增Edgeinput
+    addEdgeAttr() {
+      this.editForm.attrs.push({
+        attrName: "",
+        attrValue: "",
+        attrUnit: "",
+      });
+    },
+    //删除最后一个Edgeinput
+    delEdgeAttr() {
+      this.editForm.attrs.splice(-1, 1);
+    },
+    //删除当前Edgeinput
+    delCurEdgeAttr(index) {
+      this.editForm.attrs.splice(index, 1);
+    },
     //保存模型到服务器
     saveModel() {
+      var _this = this;
       if (this.projectId == "") {
-        this.$message("未指定项目，请选择项目后再保存！");
+        this.$confirm("快速新建项目, 是否继续?", "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        })
+          .then(() => {
+            _this.nextProjectId++;
+            var id = _this.nextProjectId;
+            console.log(id);
+            var uid = global.uid;
+            if(uid == 0) {
+              _this.$message("当前用户不存在！");
+              return;
+            }
+            var name = "快速新建项目" + id;
+            var enc = new mxCodec(mxUtils.createXmlDocument());
+            var node = enc.encode(graph.getModel());
+            var file = mxUtils.getXml(node);
+            _this.$axios.post('/graph/addProjects',
+              {
+                "id": id,
+                "uid": uid,
+                "name": name,
+                "path": file,
+              }
+            ).then((response)=>{
+              if(response.data.code==0){
+                _this.$message("上传成功！");
+                _this.projectId = id;
+                _this.ifProject = true;
+              }
+            })
+              .catch(function (error) {
+                console.log(error);
+              });
+          });
         return;
       }
       var enc = new mxCodec(mxUtils.createXmlDocument());
       var node = enc.encode(graph.getModel());
       var file = mxUtils.getXml(node);
-      var _this = this;
       this.$axios
         .post("/graph/saveModel", {
           id: _this.projectId,
@@ -579,8 +626,8 @@ export default {
     //从服务器读取模型
     readModel() {
       var _this = this;
-      if (_this.projectId == "") {
-        _this.$message("未指定项目，请选择项目后再加载！");
+      if (this.projectId == "") {
+        this.$message("未指定项目，请选择项目后再刷新！");
         return;
       }
       this.$axios
@@ -602,24 +649,62 @@ export default {
           _this.$message("获取模型文件错误，请重试！");
         });
     },
+    //检查是否存在未连通元件
+    checkGraph() {
+      graph.selectAll();
+      var cells = graph.getSelectionCells();
+      var vertexList = [];
+      var edgeList = [];
+      var list = [];
+      var finalSet = new Set();
+      for(var i=0;i<cells.length;++i){
+        if(cells[i].isVertex()) {
+          vertexList.push(cells[i].id);
+        }else {
+          var pair = {};
+          pair["source"] = cells[i].source.id;
+          pair["target"] = cells[i].target.id;
+          edgeList.push(pair);
+        }
+      }
+      let set = new UnionSet(vertexList);
+      for(var index in edgeList) {
+        set.union(edgeList[index]["source"],edgeList[index]["target"]);
+      }
+      for(let i=0;i<set.arr.length;++i) {
+        var root = set.find(set.arr[i]);
+        finalSet.add(root);
+      }
+      if(finalSet.size > 2) {
+        this.$message((finalSet.size-2) + "处未连通");
+      }else {
+        this.$message("所有元件已连通！");
+      }
+      graph.clearSelection();
+    },
   },
   mounted() {
-
-    // 连接箭头
-    // mxConnectionHandler.prototype.connectImage = new mxImage(
-    //   "../../../static/images/connector.gif",
-    //   18,
-    //   18
-    // );
+    //旋转
+    mxVertexHandler.prototype.rotationEnabled = true;
+    // //连接箭头
+    // mxConnectionHandler.prototype.connectImage = new mxImage("../../../static/images/connector.gif", 18, 18);
     doc = mxUtils.createXmlDocument();
     var _this = this;
-
+    //vue全局消息响应
     Bus.$on("curProjectId", (id) => {
       _this.projectId = id;
-      console.log(_this.projectId);
+      _this.projectFormVisible = false;
+      _this.ifProject = true;
     });
     Bus.$on("loadModel", () => {
       getModel(graph);
+    });
+    Bus.$on("user",user => {
+      this.curUser = user;
+      console.log(user);
+    });
+    Bus.$on("nextId",id => {
+      this.nextProjectId = id;
     });
 
     tbContainer = document.getElementById("tbContainer");
@@ -653,7 +738,6 @@ export default {
         graph.removeCells();
       }
     });
-
     //设置连接线为折线
     graph.connectionHandler.createEdgeState = function (me) {
       var edge = graph.createEdge(
@@ -664,7 +748,6 @@ export default {
         null,
         "edgeStyle=orthogonalEdgeStyle"
       );
-
       return new mxCellState(
         this.graph.view,
         edge,
@@ -706,10 +789,7 @@ export default {
         // }
       }
       return null;
-
-      //return null;
     };
-
     //修正
     mxConstraintHandler.prototype.intersects = function(icon, point, source, existingEdge)
 		{
@@ -728,10 +808,19 @@ export default {
     graph.setPanning(true);
     //显示导航线（用于对齐）
     mxGraphHandler.prototype.guidesEnabled = true;
-    //允许没有连接元件的线存在
-    graph.setAllowDanglingEdges(true);
+    //不允许没有连接元件的线存在
+    graph.setAllowDanglingEdges(false);
     //允许左键框选多个节点移动
     new mxRubberband(graph);
+    //元件重命名重写
+    graph.cellLabelChanged = function(cell, newValue, autoSize) {
+      var newType = doc.createElement(newValue);
+      for(var i=0;i<cell.value.attributes["length"];++i) {
+        newType.setAttribute(cell.value.attributes[i]["nodeName"],cell.value.attributes[i]["nodeValue"]);
+      }
+      cell.value = newType;
+      graph.refresh(cell);
+    };
     //撤销重做
     undoManager = new mxUndoManager();
     var listener = function (sender, evt) {
@@ -773,9 +862,7 @@ export default {
       }
     });
     //添加监听函数
-    graph
-      .getSelectionModel()
-      .addListener(mxEvent.CHANGE, function (sender, evt) {
+    graph.getSelectionModel().addListener(mxEvent.CHANGE, function (sender, evt) {
         selectionChanged(graph);
       });
 
@@ -863,7 +950,8 @@ export default {
               var type = createElement(curElement["name"]);
               getAttributes(graph, curElement["id"], type);
               getConnections(graph, curElement, type);
-              customFunct(graph, image, type);
+              customFunct(graph, image, type, curElement["id"]);
+              elementNameCountList[curElement["id"]] = 1;
             }
           } else {
             _this.$message("获取管道元件信息错误，请重试！");
@@ -887,7 +975,7 @@ export default {
           var model = mxUtils.parseXml(response.data);
           var dec = new mxCodec(model);
           dec.decode(model.documentElement, graph.getModel());
-          _this.$message("模型加载完成！");
+          // _this.$message("模型加载完成！");
         })
         .catch(function (error) {
           console.log(error);
@@ -899,9 +987,7 @@ export default {
     function createElement(name) {
       for (var index in elementAttrList) {
         var s = new XMLSerializer();
-        if (
-          s.serializeToString(elementAttrList[index]).startsWith("<" + name)
-        ) {
+        if (s.serializeToString(elementAttrList[index]).startsWith("<" + name)) {
           return elementAttrList[index];
         }
       }
@@ -911,55 +997,46 @@ export default {
     }
 
     //自定义拖拽函数的动作
-    function customFunct(graph, image, type) {
+    function customFunct(graph, image, type, id) {
       var funct = function (graph, evt, cell, x, y) {
-        addCell(graph, image, x, y, type);
+        addCell(graph, image, x, y, type, id);
       };
       mxUtils.makeDraggable(image, graph, funct, null);
     }
 
     //toolbar拖拽添加节点
-    function addCell(graph, image, x, y, type) {
+    function addCell(graph, image, x, y, type, id) {
       var width = image["naturalWidth"] / 2;
       var height = image["naturalHeight"] / 2;
       var style =
         "shape=image;image=" +
         image["src"] +
         ";verticalLabelPosition=bottom;verticalAlign=top";
+      var constraints = [];
+      var name = "";
+      if(elementNameCountList[id] < 10) {
+        name = type.nodeName + "0" + elementNameCountList[id];
+        elementNameCountList[id]++;
+      }
+      else {
+        name = type.nodeName + elementNameCountList[id];
+        elementNameCountList[id]++;
+      }
+      var newType = doc.createElement(name);
+      for(var i=0;i<type.attributes["length"];++i) {
+        newType.setAttribute(type.attributes[i]["nodeName"],type.attributes[i]["nodeValue"]);
+      }
+      for(var index in elementConnectionsList) {
+        if(elementConnectionsList[index]["id"] == id) {
+          constraints = elementConnectionsList[index]["connections"];
+          break;
+        }
+      }
       var parent = graph.getDefaultParent();
       graph.getModel().beginUpdate();
       try {
-        var vertex = graph.insertVertex(
-          parent,
-          null,
-          type,
-          x,
-          y,
-          width,
-          height,
-          style
-        );
-
-        //getConnections(graph, elementID, type);
-        var ttt = [];
-        //ttt.push({ x: 0, y: 0.5, perimeter: true });
-        //ttt.push({ x: 1, y: 0.5, perimeter: true });
-
-        // vertex['constraints'] = [
-        //   {x: 0, y: 0.5, perimeter: true},
-        //   {x: 1, y: 0.5, perimeter: true}
-        // ]
-        var len = vertex.value.attributes.length - 5;
-        for (var i = 0; i < len / 2; i++) {
-          ttt.push({
-            x: vertex.getAttribute("连接点横坐标" + i),
-            y: vertex.getAttribute("连接点纵坐标" + i),
-            perimeter: true,
-          });
-        }
-        vertex["constraints"] = ttt;
-        //mxUtils.popup(vertex.value.attributes[0].nodeValue,true);
-        //mxUtils.popup(vertex.getAttribute("连接点横坐标0"),true);
+        var vertex = graph.insertVertex(parent, null, newType, x, y, width, height, style);
+        vertex["constraints"] = constraints;
       } finally {
         graph.getModel().endUpdate();
       }
@@ -978,11 +1055,7 @@ export default {
             var attributes = response.data.attributes;
             for (var index in attributes) {
               var temp = attributes[index];
-              type.setAttribute(
-                temp["name"],
-                temp["value"] + " " + temp["unit"]
-              );
-              //console.log(temp["unit"]);
+              type.setAttribute(temp["name"], temp["value"] + "<>" + temp["unit"]);
             }
           } else {
             _this.$message("获取" + elementID + "号元件属性错误，请重试！");
@@ -1006,14 +1079,19 @@ export default {
         .then(function (response) {
           if (response.data.code == 0) {
             var connections = response.data.connections;
-            //mxUtils.popup(connections[0]["cx"],true);
+            var curConnection = {};
+            curConnection["id"] = elementID;
+            var connect = [];
             for (var index in connections) {
               var temp = connections[index];
-              type.setAttribute("连接点横坐标" + index, temp["cx"]);
-              type.setAttribute("连接点纵坐标" + index, temp["cy"]);
-              //mxUtils.popup(temp["cy"],true);
-              //console.log(temp["unit"]);
+              var pair = {};
+              pair["x"] = temp["cx"];
+              pair["y"] = temp["cy"];
+              pair["perimeter"] = true;
+              connect.push(pair);
             }
+            curConnection["connections"] = connect;
+            elementConnectionsList.push(curConnection);
           } else {
             _this.$message("获取" + elementID + "号元件连接点错误，请重试！");
           }
@@ -1042,17 +1120,8 @@ export default {
                 data.substring(data.indexOf(",", semi + 1));
             }
             var parent = graph.getDefaultParent();
-            var vertex = graph.insertVertex(
-              parent,
-              null,
-              type,
-              x,
-              y,
-              w,
-              h,
-              "shape=image;image=" +
-                data +
-                ";verticalLabelPosition=bottom;verticalAlign=top"
+            var vertex = graph.insertVertex(parent, null, type, x, y, w, h,
+              "shape=image;image=" + data + ";verticalLabelPosition=bottom;verticalAlign=top"
             );
           };
           img.src = data;
@@ -1091,17 +1160,8 @@ export default {
             data.substring(data.indexOf(",", semi + 1));
         }
         var parent = graph.getDefaultParent();
-        var vertex = graph.insertVertex(
-          parent,
-          null,
-          type,
-          x,
-          y,
-          w,
-          h,
-          "shape=image;image=" +
-            data +
-            ";verticalLabelPosition=bottom;verticalAlign=top"
+        var vertex = graph.insertVertex(parent, null, type, x, y, w, h,
+          "shape=image;image=" + data + ";verticalLabelPosition=bottom;verticalAlign=top"
         );
       };
       img.src = data;
@@ -1109,14 +1169,28 @@ export default {
 
     //动态新增右侧文本框
     function createTextField(graph, form, cell, attribute) {
-      var input = form.addText(attribute.nodeName + ":", attribute.nodeValue);
+      var tr = document.createElement("tr");
+      var values = attribute.nodeValue.split("<>");
+      var name = document.createElement("td");
+      name.innerText = attribute.nodeName + ":";
+      tr.appendChild(name);
+      var tdInput = document.createElement("td");
+      var input = document.createElement("input");
+      input.type = "text";
+      input.value = values[0];
+      tdInput.appendChild(input);
+      tr.appendChild(tdInput);
+      var unit = document.createElement("td");
+      unit.innerText = values[1];
+      tr.appendChild(unit);
+      form.appendChild(tr);
       var applyHandler = function () {
         var newValue = input.value || "";
         var oldValue = cell.getAttribute(attribute.nodeName, "");
         if (newValue != oldValue) {
           graph.getModel().beginUpdate();
           try {
-            cell.setAttribute(attribute.nodeName, newValue);
+            cell.setAttribute(attribute.nodeName, newValue + "<>" + values[1]);
             graph.refresh();
           } finally {
             graph.getModel().endUpdate();
@@ -1142,23 +1216,27 @@ export default {
       graph.container.focus();
       div.innerHTML = "";
       var cell = graph.getSelectionCell();
-      if (cell == null || cell.vertex == false) {
+      if(cell == null) {
         const center = document.createElement("center");
         mxUtils.writeln(center, "未选中元件！");
         div.appendChild(center);
-      } else {
+      }else if(cell.value == null) {
+        const center = document.createElement("center");
+        mxUtils.writeln(center, "未命名");
+        div.appendChild(center);
+      }else {
         var center = document.createElement("center");
         mxUtils.writeln(center, cell.value.nodeName);
-        var form = new mxForm();
+        var table = document.createElement("table");
+        var form = document.createElement("tbody");
         var attrs = cell.value.attributes;
         for (var i = 0; i < attrs.length; i++) {
           createTextField(graph, form, cell, attrs[i]);
-          //console.log(attrs[i]);
         }
-        //mxUtils.popup(cell.value.attributes[0].nodeName + ":" + cell.value.attributes[0].nodeValue,true);
         var br = document.createElement("br");
         center.appendChild(br);
-        center.appendChild(form.getTable());
+        table.appendChild(form);
+        center.appendChild(table);
         div.appendChild(center);
       }
     }

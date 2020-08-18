@@ -25,13 +25,13 @@ public class LoginController {
         username = HtmlUtils.htmlEscape(username);
         User user = userService.get(username, requestUser.getPassword());
         if (null == user) {
-            return new Result(-1,400);
+            return new Result(-1,400, 0);
         } else {
             if(user.getRole() == 1) {
-                return new Result(1,200);
+                return new Result(1,200, user.getId());
             }
             else {
-                return new Result(0,200);
+                return new Result(0,200, user.getId());
             }
         }
     }

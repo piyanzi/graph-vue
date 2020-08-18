@@ -29,6 +29,7 @@
 </template>
 
 <script>
+  import global from "../../assets/global";
   export default {
       data(){
           return {
@@ -55,6 +56,7 @@
                       ).then(function (response) {
                           console.log(response.data);
                           if(response.data.role == 1){
+                            global.setUid(response.data.uid);
                             that.$router.push({path: '/homePage'});
                           }
                           else if(response.data.role == 0){

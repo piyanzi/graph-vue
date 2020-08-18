@@ -57,7 +57,7 @@
       </el-pagination>
     </div>
 
-    <el-dialog title="新建项目" width="30%" :visible.sync="addFormVisible" @close="closeDialog">
+    <el-dialog title="新建项目" width="30%" :visible.sync="addFormVisible" @close="closeDialog" append-to-body>
 
       <!-- 在el-dialog中进行嵌套el-form实现弹出表格的效果 -->
       <el-form :rules="addEditRules" :model="addEditForm" ref="addEditForm">
@@ -70,7 +70,7 @@
         <el-form-item label="项目名称" label-width="80px" prop="name">
           <el-input v-model="addEditForm.name" auto-complete="off"></el-input>
         </el-form-item>
-        <el-button type="primary" @click="_upload">上传文件</el-button>
+        <el-button type="primary" @click="_upload">上传文件（若不选择文件，则生成空模型）</el-button>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="cancel">取 消</el-button>
@@ -79,7 +79,7 @@
       </div>
     </el-dialog>
 
-    <el-dialog title="编辑" width="30%" :visible.sync="editFormVisible" >
+    <el-dialog title="编辑" width="30%" :visible.sync="editFormVisible" append-to-body>
       <!-- 在el-dialog中进行嵌套el-form实现弹出表格的效果 -->
       <el-form :rules="editRules" :model="editForm" ref="editForm">
         <el-form-item label="元件名称" label-width="80px" prop="name">
@@ -240,6 +240,7 @@
             if(response.data.code==0){
               this.tableForm = response.data.projects;
               this.totalCount = response.data.projects.length;
+              Bus.$emit("nextId",this.totalCount);
             }
           })
           .catch(function (error) {
@@ -257,11 +258,12 @@
       // 显示第几页
       handleCurrentChange(val) {
         // 改变默认的页数
-        this.currentPage=val
+        this.currentPage=val;
       },
     },
     mounted(){
       this.getProject();
+
     },
     data() {
       return {
