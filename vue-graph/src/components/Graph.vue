@@ -223,6 +223,8 @@ export default {
   methods: {
     //选择/新建模型
     chooseProject() {
+      this.isProjectAlive = false;
+      this.$nextTick(() => (this.isProjectAlive = true));
       this.projectFormVisible = true;
     },
     //退出
@@ -761,8 +763,8 @@ export default {
       this.nextProjectId = id;
     });
     Bus.$on("reloadProject", () =>{
-      this.isProjectAlive = false
-      this.$nextTick(() => (this.isProjectAlive = true))
+      this.isProjectAlive = false;
+      this.$nextTick(() => (this.isProjectAlive = true));
     });
 
     tbContainer = document.getElementById("tbContainer");
