@@ -30,7 +30,7 @@
             <el-button type="primary" size="small" @click="checkGraph" icon="el-icon-document-checked">检查项目</el-button>
           </el-button-group>
           <el-button-group>
-            <el-button v-if="ifProject" type="danger" size="small" @click="exit">退出项目</el-button>
+            <el-button v-if="ifProject" type="danger" size="small" @click="exit">保存并退出</el-button>
           </el-button-group>
         </el-row>
         <el-row style="margin-left: 120px;margin-top: 2px;">
@@ -145,7 +145,7 @@
     </el-dialog>
 
     <el-dialog title="打开项目" :visible.sync="projectFormVisible" width="60%" center>
-      <Project></Project>
+      <Project v-if="isProjectAlive"></Project>
     </el-dialog>
 
   </div>
@@ -203,6 +203,7 @@ export default {
       editFormVisible: false,
       projectFormVisible: false,
       ifProject: false,
+      isProjectAlive: true,
       nextProjectId: "",
       editForm: {
         eid: "",
@@ -758,6 +759,10 @@ export default {
     });
     Bus.$on("nextId",id => {
       this.nextProjectId = id;
+    });
+    Bus.$on("reloadProject", () =>{
+      this.isProjectAlive = false
+      this.$nextTick(() => (this.isProjectAlive = true))
     });
 
     tbContainer = document.getElementById("tbContainer");

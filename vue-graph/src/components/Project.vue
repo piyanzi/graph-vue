@@ -123,6 +123,7 @@
         // 取消的时候直接设置对话框不可见即可
         this.editFormVisible = false;
         this.addFormVisible=false;
+        Bus.$emit("reloadProject");
       },
       //编辑
       handleEdit(row) {
